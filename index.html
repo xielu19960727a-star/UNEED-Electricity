@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>电费管理系统</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+:root {
+  --primary: #1E4E8C; --primary-light: #2D6DB5; --accent: #0E9F6E; --accent-light: #D1FAE5;
+  --warning: #F59E0B; --warning-light: #FEF3C7; --danger: #DC2626; --danger-light: #FEE2E2;
+  --bg: #F3F4F6; --card-bg: #FFFFFF; --border: #E5E7EB; --text: #111827;
+  --text-secondary: #6B7280; --text-muted: #9CA3AF; --sidebar-bg: #1E4E8C;
+  --sidebar-hover: #2D6DB5; --sidebar-active: #0E9F6E; --zebra: #F9FAFB; --row-hover: #EFF6FF;
+  --radius: 12px; --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.06), 0 2px 4px rgba(0,0,0,0.04);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; font-size: 14px; }
+.mono { font-family: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace; }
+.sidebar { width: 220px; min-height: 100vh; background: var(--sidebar-bg); color: #fff; display: flex; flex-direction: column; position: fixed; left: 0; top: 0; bottom: 0; z-index: 100; box-shadow: 2px 0 8px rgba(0,0,0,0.1); }
+.sidebar-logo { padding: 24px 20px; font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.12); }
+.sidebar-logo .icon { font-size: 24px; }
+.sidebar-nav { flex: 1; padding: 12px 0; }
+.sidebar-nav a { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: rgba(255,255,255,0.75); text-decoration: none; font-size: 14px; transition: all 0.2s; border-left: 3px solid transparent; cursor: pointer; }
+.sidebar-nav a:hover { background: var(--sidebar-hover); color: #fff; }
+.sidebar-nav a.active { background: rgba(14,159,110,0.15); color: #fff; border-left-color: var(--sidebar-active); font-weight: 600; }
+.sidebar-nav a .nav-icon { width: 20px; text-align: center; font-size: 16px; }
+.sidebar-footer { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.12); font-size: 12px; color: rgba(255,255,255,0.4); }
+.main-wrap { margin-left: 220px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+.topbar { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 0 32px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+.topbar-left { display: flex; align-items: center; gap: 16px; }
+.topbar-title { font-size: 18px; font-weight: 700; color: var(--primary); }
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+.topbar-select { padding: 7px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; color: var(--text); background: #fff; cursor: pointer; outline: none; }
+.topbar-select:focus { border-color: var(--primary); }
+.topbar-search { position: relative; }
+.topbar-search input { padding: 7px 12px 7px 32px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; width: 180px; outline: none; background: var(--bg); }
+.topbar-search input:focus { border-color: var(--primary); background: #fff; }
+.topbar-search .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 14px; }
+.notif-btn { position: relative; background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-secondary); padding: 4px; }
+.notif-btn .dot { position: absolute; top: 2px; right: 2px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 2px solid #fff; }
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; cursor: pointer; }
+.lang-toggle { padding: 5px 10px; border: 1px solid var(--border); border-radius: 6px; background: #fff; font-size: 12px; cursor: pointer; color: var(--text-secondary); font-weight: 500; }
+.lang-toggle:hover { border-color: var(--primary); color: var(--primary); }
+.content { padding: 24px 32px; flex: 1; }
+.page-section { display: none; }
+.page-section.active { display: block; }
+.card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 20px; }
+.card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.card-header h3 { font-size: 15px; font-weight: 700; color: var(--text); }
+.card-body { padding: 20px; }
+.kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+.kpi-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; position: relative; overflow: hidden; }
+.kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.kpi-card.blue::before { background: var(--primary); }
+.kpi-card.green::before { background: var(--accent); }
+.kpi-card.amber::before { background: var(--warning); }
+.kpi-card.teal::before { background: #0D9488; }
+.kpi-card.red::before { background: var(--danger); }
+.kpi-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+.kpi-value { font-size: 28px; font-weight: 800; color: var(--text); line-height: 1.1; }
+.kpi-unit { font-size: 14px; font-weight: 500; color: var(--text-secondary); margin-left: 4px; }
+.kpi-trend { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; margin-top: 8px; padding: 2px 8px; border-radius: 12px; }
+.kpi-trend.up { background: var(--danger-light); color: var(--danger); }
+.kpi-trend.down { background: var(--accent-light); color: var(--accent); }
+.kpi-trend.neutral { background: #F3F4F6; color: var(--text-secondary); }
+.kpi-ring { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); }
+.badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.badge-green { background: var(--accent-light); color: #065F46; }
+.badge-amber { background: var(--warning-light); color: #92400E; }
+.badge-red { background: var(--danger-light); color: #991B1B; }
+.badge-blue { background: #DBEAFE; color: #1E40AF; }
+.badge-gray { background: #F3F4F6; color: #4B5563; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table th { text-align: left; padding: 10px 12px; font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 2px solid var(--border); background: var(--bg); white-space: nowrap; }
+.data-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.data-table tr:nth-child(even) { background: var(--zebra); }
+.data-table tr:hover { background: var(--row-hover); }
+.data-table .num { text-align: right; font-family: "JetBrains Mono", Consolas, monospace; }
+.data-table .total-row { font-weight: 700; background: #F0F7FF !important; border-top: 2px solid var(--primary); }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; white-space: nowrap; }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-light); }
+.btn-outline { background: #fff; color: var(--text-secondary); border: 1px solid var(--border); }
+.btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+.btn-sm { padding: 5px 10px; font-size: 12px; border-radius: 6px; }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-danger:hover { background: #B91C1C; }
+.btn-link { background: none; border: none; color: var(--primary); cursor: pointer; font-size: 12px; padding: 2px 4px; text-decoration: underline; }
+.btn-link:hover { color: var(--primary-light); }
+.chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.chart-row-60-40 { display: grid; grid-template-columns: 3fr 2fr; gap: 20px; }
+.chart-box { width: 100%; height: 300px; }
+.chart-box-lg { width: 100%; height: 360px; }
+.toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
+.split-tag { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+.split-tag.demand { background: #EDE9FE; color: #5B21B6; }
+.split-tag.area { background: #E0F2FE; color: #0369A1; }
+.split-tag.ratio { background: #FEF3C7; color: #92400E; }
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.45); z-index: 200; align-items: center; justify-content: center; }
+.modal-overlay.show { display: flex; }
+.modal { background: #fff; border-radius: var(--radius); box-shadow: 0 20px 60px rgba(0,0,0,0.2); width: 520px; max-width: 90vw; max-height: 85vh; overflow-y: auto; }
+.modal-header { padding: 18px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.modal-header h3 { font-size: 16px; font-weight: 700; }
+.modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted); padding: 4px; }
+.modal-close:hover { color: var(--text); }
+.modal-body { padding: 24px; }
+.modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
+.form-input { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; outline: none; transition: border-color 0.2s; }
+.form-input:focus { border-color: var(--primary); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.toast-container { position: fixed; top: 24px; right: 24px; z-index: 300; display: flex; flex-direction: column; gap: 8px; }
+.toast { padding: 12px 20px; border-radius: 8px; font-size: 13px; font-weight: 500; color: #fff; box-shadow: var(--shadow-md); animation: toastIn 0.3s ease; display: flex; align-items: center; gap: 8px; min-width: 240px; }
+.toast.success { background: var(--accent); }
+.toast.warning { background: var(--warning); }
+.toast.error { background: var(--danger); }
+.toast.info { background: var(--primary); }
+@keyframes toastIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+.tabs { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 20px; }
+.tab-btn { padding: 10px 20px; font-size: 13px; font-weight: 600; color: var(--text-secondary); background: none; border: none; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; }
+.tab-btn:hover { color: var(--primary); }
+.tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+.setting-item { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border); }
+.setting-item:last-child { border-bottom: none; }
+.setting-info .setting-title { font-size: 14px; font-weight: 600; color: var(--text); }
+.setting-info .setting-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.toggle-switch { position: relative; width: 44px; height: 24px; background: #D1D5DB; border-radius: 12px; cursor: pointer; transition: background 0.2s; }
+.toggle-switch.on { background: var(--accent); }
+.toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; background: #fff; border-radius: 50%; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.toggle-switch.on::after { transform: translateX(20px); }
+.info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.info-item { padding: 16px; background: var(--bg); border-radius: 8px; border: 1px solid var(--border); }
+.info-item .info-label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+.info-item .info-value { font-size: 15px; font-weight: 700; color: var(--text); }
+.timeline { position: relative; padding-left: 28px; }
+.timeline::before { content: ''; position: absolute; left: 8px; top: 4px; bottom: 4px; width: 2px; background: var(--border); }
+.timeline-item { position: relative; padding-bottom: 20px; }
+.timeline-item:last-child { padding-bottom: 0; }
+.timeline-dot { position: absolute; left: -24px; top: 4px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--primary); background: #fff; }
+.timeline-item:first-child .timeline-dot { background: var(--primary); }
+.timeline-time { font-size: 12px; color: var(--text-muted); margin-bottom: 2px; }
+.timeline-content { font-size: 13px; color: var(--text); }
+.period-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+.period-card { padding: 16px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--card-bg); text-align: center; }
+.period-card .period-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+.period-card .period-time { font-size: 12px; color: var(--text-muted); }
+.period-card .period-rate { font-size: 20px; font-weight: 800; margin-top: 8px; }
+.period-card.peak { border-top: 3px solid var(--danger); }
+.period-card.peak .period-rate { color: var(--danger); }
+.period-card.flat { border-top: 3px solid var(--primary); }
+.period-card.flat .period-rate { color: var(--primary); }
+.period-card.valley { border-top: 3px solid var(--accent); }
+.period-card.valley .period-rate { color: var(--accent); }
+.pagination { display: flex; align-items: center; justify-content: flex-end; gap: 4px; margin-top: 16px; }
+.pagination button { padding: 6px 12px; border: 1px solid var(--border); border-radius: 6px; background: #fff; font-size: 12px; cursor: pointer; color: var(--text-secondary); }
+.pagination button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+.pagination button:hover:not(.active) { border-color: var(--primary); color: var(--primary); }
+.filter-row { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.filter-row label { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+.bill-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.bill-detail-item { padding: 10px; background: var(--bg); border-radius: 8px; }
+.bill-detail-item .bd-label { font-size: 11px; color: var(--text-muted); margin-bottom: 2px; }
+.bill-detail-item .bd-value { font-size: 15px; font-weight: 700; }
+.rate-compare { display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: center; }
+.rate-col { text-align: center; padding: 16px; background: var(--bg); border-radius: 8px; }
+.rate-col .rc-label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+.rate-col .rc-value { font-size: 22px; font-weight: 800; }
+.rate-arrow { font-size: 24px; color: var(--text-muted); }
+.rate-change { font-size: 12px; font-weight: 600; margin-top: 4px; }
+.rate-change.up { color: var(--danger); }
+.rate-change.down { color: var(--accent); }
+.data-refreshing { opacity: 0.5; transition: opacity 0.15s; pointer-events: none; }
+@media (max-width: 1440px) {
+  .kpi-row { grid-template-columns: repeat(2, 1fr); }
+  .chart-row, .chart-row-60-40 { grid-template-columns: 1fr; }
+  .period-cards { grid-template-columns: 1fr; }
+  .info-grid { grid-template-columns: repeat(2, 1fr); }
+}
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #9CA3AF; }
+.action-btns { display: flex; gap: 4px; }
+.bill-pdf-preview { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 24px; font-size: 13px; }
+.bill-pdf-header { text-align: center; border-bottom: 2px solid var(--primary); padding-bottom: 16px; margin-bottom: 16px; }
+.bill-pdf-header h2 { color: var(--primary); font-size: 18px; margin-bottom: 4px; }
+.bill-pdf-header p { color: var(--text-muted); font-size: 12px; }
+.bill-pdf-section { margin-bottom: 16px; }
+.bill-pdf-section h4 { color: var(--primary); font-size: 13px; margin-bottom: 8px; border-left: 3px solid var(--primary); padding-left: 8px; }
+.bill-pdf-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.bill-pdf-table th, .bill-pdf-table td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; }
+.bill-pdf-table th { background: var(--bg); font-weight: 600; color: var(--text-secondary); }
+.bill-pdf-table td.num { text-align: right; font-family: "JetBrains Mono", monospace; }
+.bill-pdf-total { background: var(--bg); padding: 12px; border-radius: 6px; margin-top: 12px; display: flex; justify-content: space-between; align-items: center; }
+.bill-pdf-total .total-label { font-weight: 600; color: var(--text-secondary); }
+.bill-pdf-total .total-value { font-size: 18px; font-weight: 800; color: var(--primary); font-family: "JetBrains Mono", monospace; }
+.bill-history-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.bill-history-table th, .bill-history-table td { border: 1px solid var(--border); padding: 8px 12px; text-align: left; }
+.bill-history-table th { background: var(--bg); font-weight: 600; color: var(--text-secondary); }
+.bill-history-table td.num { text-align: right; font-family: "JetBrains Mono", monospace; }
+.bill-history-table tr:hover { background: var(--row-hover); }
+
+.multi-select { position: relative; min-width: 150px; }
+.multi-select-btn { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 7px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; color: var(--text); background: #fff; cursor: pointer; outline: none; min-width: 150px; text-align: left; transition: border-color 0.2s; }
+.multi-select-btn:hover, .multi-select-btn.open { border-color: var(--primary); }
+.multi-select-btn .arrow { font-size: 10px; color: var(--text-muted); transition: transform 0.2s; flex-shrink: 0; }
+.multi-select-btn.open .arrow { transform: rotate(180deg); }
+.multi-select-dropdown { display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #fff; border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow-md); z-index: 200; max-height: 280px; overflow-y: auto; min-width: 180px; }
+.multi-select-dropdown.show { display: block; }
+.ms-option { display: flex; align-items: center; gap: 8px; padding: 8px 12px; cursor: pointer; font-size: 13px; transition: background 0.15s; user-select: none; }
+.ms-option:hover { background: var(--bg); }
+.ms-option.selected { background: #EFF6FF; }
+.ms-option input[type="checkbox"] { accent-color: var(--primary); width: 15px; height: 15px; cursor: pointer; flex-shrink: 0; }
+.ms-option.special { font-weight: 600; color: var(--primary); border-bottom: 1px solid var(--border); background: #FAFBFF; }
+.ms-option.special:hover { background: #EFF6FF; }
+.ms-divider { height: 1px; background: var(--border); margin: 2px 0; }
+.badge-orange { background: #FFF7ED; color: #C2410C; }
+.badge-yellow { background: #FEFCE8; color: #A16207; }
+</style>
+</head>
+<body>
+<div class="toast-container" id="toastContainer"></div>
+<aside class="sidebar">
+  <div class="sidebar-logo"><span class="icon">&#9889;</span><span data-i18n="logo">电费管理</span></div>
+  <nav class="sidebar-nav">
+    <a href="#" class="active" data-page="overview"><span class="nav-icon">&#128202;</span><span data-i18n="nav_overview">总览</span></a>
+    <a href="#" data-page="capacity"><span class="nav-icon">&#128200;</span><span data-i18n="nav_capacity">容量利用率监控</span></a>
+    <a href="#" data-page="tou"><span class="nav-icon">&#128336;</span><span data-i18n="nav_tou">分时电价拆分</span></a>
+    <a href="#" data-page="billing"><span class="nav-icon">&#128101;</span><span data-i18n="nav_tenant">租户收费管理</span></a>
+    <a href="#" data-page="rates"><span class="nav-icon">&#128220;</span><span data-i18n="nav_history">费率历史</span></a>
+    <a href="#" data-page="settings"><span class="nav-icon">&#9881;&#65039;</span><span data-i18n="nav_settings">系统设置</span></a>
+  </nav>
+  <div class="sidebar-footer">v2.4.1 &copy; 2026</div>
+</aside>
+<div class="main-wrap">
+  <header class="topbar">
+    <div class="topbar-left"><span class="topbar-title" id="pageTitle" data-i18n="page_title_overview">电费管理总览</span></div>
+    <div class="topbar-right">
+      <div class="multi-select" id="monthMultiSelect"><button class="multi-select-btn" id="monthBtn" onclick="toggleDropdown('monthDropdown')"><span id="monthBtnText">2026-11</span><span class="arrow">&#9660;</span></button><div class="multi-select-dropdown" id="monthDropdown"></div></div>
+      <div class="multi-select" id="tenantMultiSelect"><button class="multi-select-btn" id="tenantBtn" onclick="toggleDropdown('tenantDropdown')"><span id="tenantBtnText">全部租户</span><span class="arrow">&#9660;</span></button><div class="multi-select-dropdown" id="tenantDropdown"></div></div>
+      <div class="topbar-search"><span class="search-icon">&#128269;</span><input type="text" data-i18n-placeholder="search_placeholder" placeholder="搜索租户/表计..."></div>
+      <button class="notif-btn" title="通知" onclick="showToast('info','您有3条未读通知')">&#128276;<span class="dot"></span></button>
+      <button class="lang-toggle" id="langToggle">EN</button>
+      <div class="avatar">管</div>
+    </div>
+  </header>
+  <main class="content">
+    <!-- PAGE: OVERVIEW -->
+    <div class="page-section active" id="page-overview">
+      <div class="kpi-row" id="ovKpiRow">
+        <div class="kpi-card blue"><div class="kpi-label" data-i18n="kpi_contract">合同预订容量</div><div class="kpi-value mono" id="kpiContract">1,200<span class="kpi-unit">kW</span></div><div class="kpi-trend neutral" id="kpiContractTrend"><span>&#8212;</span><span data-i18n="kpi_stable">环比持平</span></div></div>
+        <div class="kpi-card green"><div class="kpi-label" data-i18n="kpi_actual">实际最大需量</div><div class="kpi-value mono" id="kpiActual">1,092<span class="kpi-unit">kW</span></div><div class="kpi-trend down" id="kpiActualTrend"><span>&#8595; 2.1%</span><span data-i18n="kpi_down">较上月下降</span></div></div>
+        <div class="kpi-card amber"><div class="kpi-label" data-i18n="kpi_util">容量利用率</div><div style="display:flex;align-items:center;gap:16px;"><div><div class="kpi-value mono" id="kpiUtil">91<span class="kpi-unit">%</span></div><div class="kpi-trend neutral" id="kpiUtilTrend" style="background:var(--accent-light);color:#065F46;"><span data-i18n="kpi_normal">正常范围</span></div></div><div class="kpi-ring" id="kpiRingWrap"><svg width="72" height="72" viewBox="0 0 72 72"><circle cx="36" cy="36" r="30" fill="none" stroke="#E5E7EB" stroke-width="6"/><circle id="kpiRingArc" cx="36" cy="36" r="30" fill="none" stroke="#0E9F6E" stroke-width="6" stroke-dasharray="172.8" stroke-dashoffset="15.5" stroke-linecap="round" transform="rotate(-90 36 36)"/><text id="kpiRingText" x="36" y="38" text-anchor="middle" font-size="11" font-weight="700" fill="#111827">91%</text></svg></div></div></div>
+        <div class="kpi-card teal"><div class="kpi-label" data-i18n="kpi_cost">本月总电费</div><div class="kpi-value mono" id="kpiCost" style="font-size:24px;">RM 86,420</div><div class="kpi-trend up" id="kpiCostTrend"><span>&#8593; 3.2%</span><span data-i18n="kpi_up">环比上升</span></div></div>
+      </div>
+      <div class="card"><div class="card-header"><h3 data-i18n="capacity_title">&#128200; 容量利用率监控</h3><button class="btn btn-outline btn-sm" onclick="navigateTo('capacity')" data-i18n="view_detail">查看详情</button></div><div class="card-body"><div class="chart-row-60-40"><div><div id="ovCapacityChart" class="chart-box"></div></div><div><div class="toolbar"><strong style="font-size:13px;" data-i18n="alert_list">&#9888;&#65039; 预警列表</strong><button class="btn btn-outline btn-sm" onclick="openThresholdModal()" data-i18n="threshold_config">阈值: 85%</button></div><div style="max-height:280px;overflow-y:auto;"><table class="data-table" id="ovAlertTable"><thead><tr><th data-i18n="th_tenant_meter">租户/表计</th><th class="num" data-i18n="th_contract_cap">合同容量</th><th class="num" data-i18n="th_actual">实际需量</th><th class="num" data-i18n="th_util">利用率</th><th data-i18n="th_status">状态</th><th data-i18n="th_action">建议</th></tr></thead><tbody></tbody></table></div></div></div></div></div>
+      <div class="card"><div class="card-header"><h3 data-i18n="tou_title">&#128336; 分时电价成本拆分</h3><button class="btn btn-outline btn-sm" onclick="navigateTo('tou')" data-i18n="view_detail">查看详情</button></div><div class="card-body"><div class="chart-row-60-40" style="margin-bottom:20px;"><div><div id="ovTouBarChart" class="chart-box"></div></div><div><div id="ovTouPieChart" class="chart-box"></div></div></div><div class="toolbar"><strong style="font-size:13px;" data-i18n="tou_tenant_detail">各租户分时用电明细</strong><button class="btn btn-outline btn-sm" onclick="showToast('success','计费依据已导出')" data-i18n="export_billing">&#128229; 导出计费依据</button></div><table class="data-table" id="ovTouDetailTable"><thead><tr><th data-i18n="th_tenant">租户</th><th class="num" data-i18n="th_peak_kwh">尖峰(kWh)</th><th class="num" data-i18n="th_flat_kwh">平段(kWh)</th><th class="num" data-i18n="th_valley_kwh">谷段(kWh)</th><th class="num" data-i18n="th_total_kwh">总用电(kWh)</th><th class="num" data-i18n="th_total_cost">合计(RM)</th></tr></thead><tbody></tbody></table></div></div>
+      <div class="card"><div class="card-header"><h3 data-i18n="billing_title">&#128101; 租户收费管理</h3><button class="btn btn-outline btn-sm" onclick="navigateTo('billing')" data-i18n="view_detail">查看详情</button></div><div class="card-body"><div style="overflow-x:auto;"><table class="data-table" id="ovBillingTable"><thead><tr><th data-i18n="th_tenant">租户</th><th class="num" data-i18n="th_total_due">应收合计(RM)</th><th data-i18n="th_pay_status">缴费状态</th><th data-i18n="th_ops">操作</th></tr></thead><tbody></tbody></table></div></div></div>
+    </div>
+    <!-- PAGE: CAPACITY -->
+    <div class="page-section" id="page-capacity">
+      <div class="kpi-row" id="capKpiRow">
+        <div class="kpi-card blue"><div class="kpi-label" data-i18n="cap_kpi_total">总合同容量</div><div class="kpi-value mono" id="capKpiTotal">1,200<span class="kpi-unit">kW</span></div><div class="kpi-trend neutral" id="capKpiTotalTrend"><span id="capKpiTenantCount">5</span><span data-i18n="cap_kpi_tenants">租户</span></div></div>
+        <div class="kpi-card green"><div class="kpi-label" data-i18n="cap_kpi_peak">本月峰值需量</div><div class="kpi-value mono" id="capKpiPeak">1,092<span class="kpi-unit">kW</span></div><div class="kpi-trend down" id="capKpiPeakTrend"><span>&#8595; 23kW</span><span data-i18n="kpi_down">较上月下降</span></div></div>
+        <div class="kpi-card amber"><div class="kpi-label" data-i18n="cap_kpi_avg_util">平均利用率</div><div class="kpi-value mono" id="capKpiAvgUtil">88.9<span class="kpi-unit">%</span></div><div class="kpi-trend neutral" id="capKpiAvgUtilTrend"><span data-i18n="cap_kpi_stable">整体平稳</span></div></div>
+        <div class="kpi-card red"><div class="kpi-label" data-i18n="cap_kpi_penalty">预计罚款</div><div class="kpi-value mono" id="capKpiPenalty" style="font-size:24px;">RM 4,200</div><div class="kpi-trend up" id="capKpiPenaltyTrend"><span id="capKpiBelowCount">2户低于阈值</span></div></div>
+      </div>
+      <div class="card"><div class="card-header"><h3 data-i18n="cap_trend_title">&#128200; 各租户容量利用率趋势（近12个月）</h3><div style="display:flex;gap:8px;"><button class="btn btn-outline btn-sm" onclick="showToast('info','数据已刷新')" data-i18n="btn_refresh">&#128260; 刷新</button><button class="btn btn-outline btn-sm" onclick="showToast('success','趋势图已导出')" data-i18n="btn_export">&#128229; 导出</button></div></div><div class="card-body"><div id="capTrendChart" class="chart-box-lg"></div></div></div>
+      <div class="chart-row"><div class="card"><div class="card-header"><h3 data-i18n="cap_compare_title">&#128202; 租户容量对比</h3></div><div class="card-body"><div id="capCompareChart" class="chart-box"></div></div></div><div class="card"><div class="card-header"><h3 data-i18n="cap_util_dist">&#127919; 利用率分布</h3></div><div class="card-body"><div id="capUtilPieChart" class="chart-box"></div></div></div></div>
+      <div class="card"><div class="card-header"><h3 data-i18n="cap_detail_title">&#128203; 容量利用明细表</h3><button class="btn btn-outline btn-sm" onclick="openThresholdModal()" data-i18n="threshold_config">阈值: 85%</button></div><div class="card-body"><table class="data-table" id="capDetailTable"><thead><tr><th data-i18n="th_tenant">租户</th><th data-i18n="th_meter">表计号</th><th class="num" data-i18n="th_contract_cap">合同容量(kW)</th><th class="num" data-i18n="th_actual">实际需量(kW)</th><th class="num" data-i18n="th_util">利用率(%)</th><th data-i18n="th_status">状态</th><th class="num" data-i18n="th_penalty">预计罚款(RM)</th><th data-i18n="th_suggestion">建议</th></tr></thead><tbody></tbody></table></div></div>
+    </div>
+    <!-- PAGE: TOU -->
+    <div class="page-section" id="page-tou">
+      <div class="kpi-row" id="touKpiRow">
+        <div class="kpi-card red"><div class="kpi-label" data-i18n="tou_kpi_peak">尖峰电费</div><div class="kpi-value mono" id="touKpiPeak" style="font-size:22px;">RM 32,860</div><div class="kpi-trend up" id="touKpiPeakTrend"><span>&#8593; 4.1%</span><span data-i18n="kpi_up">环比上升</span></div></div>
+        <div class="kpi-card blue"><div class="kpi-label" data-i18n="tou_kpi_flat">平段电费</div><div class="kpi-value mono" id="touKpiFlat" style="font-size:22px;">RM 36,120</div><div class="kpi-trend neutral" id="touKpiFlatTrend"><span>&#8212;</span><span data-i18n="kpi_stable">环比持平</span></div></div>
+        <div class="kpi-card green"><div class="kpi-label" data-i18n="tou_kpi_valley">谷段电费</div><div class="kpi-value mono" id="touKpiValley" style="font-size:22px;">RM 17,440</div><div class="kpi-trend down" id="touKpiValleyTrend"><span>&#8595; 1.8%</span><span data-i18n="kpi_down">较上月下降</span></div></div>
+        <div class="kpi-card teal"><div class="kpi-label" data-i18n="tou_kpi_total">本月总电费</div><div class="kpi-value mono" id="touKpiTotal" style="font-size:22px;">RM 86,420</div><div class="kpi-trend up" id="touKpiTotalTrend"><span>&#8593; 3.2%</span><span data-i18n="kpi_up">环比上升</span></div></div>
+      </div>
+      <div class="period-cards" id="touPeriodCards">
+        <div class="period-card peak"><div class="period-name" data-i18n="period_peak">尖峰时段</div><div class="period-time">09:00 - 12:00 / 18:00 - 21:00</div><div class="period-rate mono" id="periodPeakRate">RM 0.52<span style="font-size:12px;color:var(--text-muted);">/kWh</span></div></div>
+        <div class="period-card flat"><div class="period-name" data-i18n="period_flat">平段时段</div><div class="period-time">07:00 - 09:00 / 12:00 - 18:00 / 21:00 - 23:00</div><div class="period-rate mono" id="periodFlatRate">RM 0.35<span style="font-size:12px;color:var(--text-muted);">/kWh</span></div></div>
+        <div class="period-card valley"><div class="period-name" data-i18n="period_valley">谷段时段</div><div class="period-time">23:00 - 07:00</div><div class="period-rate mono" id="periodValleyRate">RM 0.22<span style="font-size:12px;color:var(--text-muted);">/kWh</span></div></div>
+      </div>
+      <div class="card"><div class="card-header"><h3 data-i18n="tou_trend_title">&#128200; 分时用电趋势（近6个月）</h3><button class="btn btn-outline btn-sm" onclick="showToast('success','趋势数据已导出')" data-i18n="btn_export">&#128229; 导出</button></div><div class="card-body"><div id="touTrendChart" class="chart-box-lg"></div></div></div>
+      <div class="chart-row"><div class="card"><div class="card-header"><h3 data-i18n="tou_cost_pie">&#128176; 成本占比分析</h3></div><div class="card-body"><div id="touCostPieChart" class="chart-box"></div></div></div><div class="card"><div class="card-header"><h3 data-i18n="tou_tenant_pie">&#127970; 租户用电占比</h3></div><div class="card-body"><div id="touTenantPieChart" class="chart-box"></div></div></div></div>
+      <div class="card"><div class="card-header"><h3 data-i18n="tou_detail_title">&#128203; 各租户分时用电明细</h3><button class="btn btn-outline btn-sm" onclick="showToast('success','计费依据已导出')" data-i18n="export_billing">&#128229; 导出计费依据</button></div><div class="card-body"><table class="data-table" id="touFullTable"><thead><tr><th data-i18n="th_tenant">租户</th><th class="num" data-i18n="th_peak_kwh">尖峰(kWh)</th><th class="num" data-i18n="th_flat_kwh">平段(kWh)</th><th class="num" data-i18n="th_valley_kwh">谷段(kWh)</th><th class="num" data-i18n="th_total_kwh">总用电(kWh)</th><th class="num" data-i18n="th_peak_cost">尖峰费用(RM)</th><th class="num" data-i18n="th_flat_cost">平段费用(RM)</th><th class="num" data-i18n="th_valley_cost">谷段费用(RM)</th><th class="num" data-i18n="th_total_cost">合计(RM)</th><th class="num" data-i18n="th_avg_rate">均价(RM/kWh)</th></tr></thead><tbody></tbody></table></div></div>
+    </div>
+    <!-- PAGE: BILLING -->
+    <div class="page-section" id="page-billing">
+      <div class="kpi-row" id="billKpiRow">
+        <div class="kpi-card blue"><div class="kpi-label" data-i18n="bill_kpi_billed">已出账单</div><div class="kpi-value mono" id="billKpiBilled" style="font-size:22px;">RM 25,757</div><div class="kpi-trend neutral" id="billKpiBilledTrend"><span id="billKpiBillCount">5</span><span data-i18n="bill_kpi_bills">笔账单</span></div></div>
+        <div class="kpi-card green"><div class="kpi-label" data-i18n="bill_kpi_collected">已收款</div><div class="kpi-value mono" id="billKpiCollected" style="font-size:22px;">RM 14,757</div><div class="kpi-trend down" id="billKpiCollectedTrend"><span id="billKpiCollRate">57.3%</span><span data-i18n="bill_kpi_rate">收款率</span></div></div>
+        <div class="kpi-card amber"><div class="kpi-label" data-i18n="bill_kpi_pending">待收款</div><div class="kpi-value mono" id="billKpiPending" style="font-size:22px;">RM 7,237</div><div class="kpi-trend neutral" id="billKpiPendingTrend"><span id="billKpiPendingCount">2</span><span data-i18n="bill_kpi_pending_bills">笔待缴</span></div></div>
+        <div class="kpi-card red"><div class="kpi-label" data-i18n="bill_kpi_overdue">逾期未缴</div><div class="kpi-value mono" id="billKpiOverdue" style="font-size:22px;">RM 3,763</div><div class="kpi-trend up" id="billKpiOverdueTrend"><span id="billKpiOverdueCount">1</span><span data-i18n="bill_kpi_overdue_bills">笔欠费</span></div></div>
+      </div>
+      <div class="card"><div class="card-header"><h3 data-i18n="bill_mgmt_title">&#128101; 租户收费管理</h3><div style="display:flex;gap:8px;"><button class="btn btn-primary btn-sm" onclick="showToast('success','月度账单已生成')" data-i18n="gen_bill">&#128203; 生成月度账单</button><button class="btn btn-outline btn-sm" onclick="showToast('success','账单已导出')" data-i18n="export_excel">&#128229; 导出 Excel</button></div></div><div class="card-body"><div class="filter-row"><label data-i18n="filter_status">筛选状态:</label><select class="topbar-select" id="billStatusFilter" onchange="renderBillingPage()"><option value="all" data-i18n="filter_all">全部</option><option value="paid" data-i18n="pay_paid">已缴</option><option value="pending" data-i18n="pay_pending">待缴</option><option value="overdue" data-i18n="pay_overdue">欠费</option></select><label data-i18n="filter_split">分摊方式:</label><select class="topbar-select" id="billSplitFilter" onchange="renderBillingPage()"><option value="all" data-i18n="filter_all">全部</option><option value="demand" data-i18n="split_by_demand">按需求量分摊</option><option value="area" data-i18n="split_by_area">按面积分摊</option><option value="ratio" data-i18n="split_by_ratio">按比例分配</option></select></div><div style="overflow-x:auto;"><table class="data-table" id="billingPageTable"><thead><tr><th data-i18n="th_tenant">租户</th><th data-i18n="th_meter">表计号</th><th class="num" data-i18n="th_usage">用电量(kWh)</th><th class="num" data-i18n="th_energy_fee">分时电费(RM)</th><th class="num" data-i18n="th_cap_share">容量分摊(RM)</th><th data-i18n="th_split_type">分摊方式</th><th class="num" data-i18n="th_afa">AFA附加费(RM)</th><th class="num" data-i18n="th_total_due">应收合计(RM)</th><th data-i18n="th_pay_status">缴费状态</th><th data-i18n="th_ops">操作</th></tr></thead><tbody></tbody></table></div><div class="pagination"><button>&laquo;</button><button class="active">1</button><button>2</button><button>&raquo;</button></div></div></div>
+      <div class="chart-row"><div class="card"><div class="card-header"><h3 data-i18n="bill_trend_title">&#128202; 月度收费趋势</h3></div><div class="card-body"><div id="billTrendChart" class="chart-box"></div></div></div><div class="card"><div class="card-header"><h3 data-i18n="bill_status_pie">&#128176; 缴费状态分布</h3></div><div class="card-body"><div id="billStatusPieChart" class="chart-box"></div></div></div></div>
+    </div>
+    <!-- PAGE: RATES -->
+    <div class="page-section" id="page-rates">
+      <div class="kpi-row" id="rateKpiRow">
+        <div class="kpi-card red"><div class="kpi-label" data-i18n="rate_kpi_peak">当前尖峰电价</div><div class="kpi-value mono" id="rateKpiPeak">0.52<span class="kpi-unit">RM/kWh</span></div><div class="kpi-trend up" id="rateKpiPeakTrend"><span>&#8593; 4.0%</span><span data-i18n="rate_kpi_vs_last">较上期</span></div></div>
+        <div class="kpi-card blue"><div class="kpi-label" data-i18n="rate_kpi_flat">当前平段电价</div><div class="kpi-value mono" id="rateKpiFlat">0.35<span class="kpi-unit">RM/kWh</span></div><div class="kpi-trend up" id="rateKpiFlatTrend"><span>&#8593; 2.9%</span><span data-i18n="rate_kpi_vs_last">较上期</span></div></div>
+        <div class="kpi-card green"><div class="kpi-label" data-i18n="rate_kpi_valley">当前谷段电价</div><div class="kpi-value mono" id="rateKpiValley">0.22<span class="kpi-unit">RM/kWh</span></div><div class="kpi-trend up" id="rateKpiValleyTrend"><span>&#8593; 4.8%</span><span data-i18n="rate_kpi_vs_last">较上期</span></div></div>
+        <div class="kpi-card teal"><div class="kpi-label" data-i18n="rate_kpi_afa">当前AFA费率</div><div class="kpi-value mono" id="rateKpiAfa">0.030<span class="kpi-unit">RM/kWh</span></div><div class="kpi-trend up" id="rateKpiAfaTrend"><span>&#8593; 7.1%</span><span data-i18n="rate_kpi_vs_last">较上期</span></div></div>
+      </div>
+      <div class="card"><div class="card-header"><h3 data-i18n="rate_trend_title">&#128200; 电价变化趋势</h3><button class="btn btn-primary btn-sm" onclick="openAddRateModal()" data-i18n="add_rate">+ 新增费率</button></div><div class="card-body"><div id="rateTrendChart" class="chart-box-lg"></div></div></div>
+      <div class="chart-row"><div class="card"><div class="card-header"><h3 data-i18n="rate_history_title">&#128203; 费率历史记录</h3></div><div class="card-body"><table class="data-table" id="ratePageTable"><thead><tr><th data-i18n="th_eff_month">生效月份</th><th class="num" data-i18n="th_peak_rate">尖峰(RM/kWh)</th><th class="num" data-i18n="th_flat_rate">平段(RM/kWh)</th><th class="num" data-i18n="th_valley_rate">谷段(RM/kWh)</th><th class="num" data-i18n="th_afa_rate">AFA(RM/kWh)</th><th data-i18n="th_status">状态</th><th data-i18n="th_ops">操作</th></tr></thead><tbody></tbody></table></div></div><div class="card"><div class="card-header"><h3 data-i18n="rate_audit_title">&#128221; 费率变更日志</h3></div><div class="card-body"><div class="timeline" id="rateTimeline"></div></div></div></div>
+    </div>
+    <!-- PAGE: SETTINGS -->
+    <div class="page-section" id="page-settings">
+      <div class="card"><div class="card-header"><h3 data-i18n="settings_title">&#9881;&#65039; 系统设置</h3></div><div class="card-body">
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="tab-threshold" data-i18n="tab_threshold">阈值设置</button>
+          <button class="tab-btn" data-tab="tab-tou-config" data-i18n="tab_tou_config">分时配置</button>
+          <button class="tab-btn" data-tab="tab-tenant-mgmt" data-i18n="tab_tenant_mgmt">租户管理</button>
+        </div>
+        <div class="tab-panel active" id="tab-threshold">
+          <h4 style="margin-bottom:16px;font-size:14px;" data-i18n="threshold_title">容量预警阈值配置</h4>
+          <div class="form-row"><div class="form-group"><label class="form-label" data-i18n="threshold_warn">预警阈值 (%)</label><input class="form-input mono" type="number" value="85"></div><div class="form-group"><label class="form-label" data-i18n="threshold_danger">危险阈值 (%)</label><input class="form-input mono" type="number" value="70"></div></div>
+          <div class="form-row"><div class="form-group"><label class="form-label" data-i18n="threshold_overload">过载阈值 (%)</label><input class="form-input mono" type="number" value="100"></div><div class="form-group"><label class="form-label" data-i18n="threshold_penalty">罚款起算点 (%)</label><input class="form-input mono" type="number" value="85"></div></div>
+          <div style="margin-top:16px;display:flex;gap:8px;"><button class="btn btn-primary" onclick="showToast('success','阈值设置已保存')" data-i18n="btn_save">&#128190; 保存设置</button><button class="btn btn-outline" onclick="showToast('info','已恢复默认值')" data-i18n="btn_reset">&#128260; 恢复默认</button></div>
+        </div>
+        <div class="tab-panel" id="tab-tou-config">
+          <h4 style="margin-bottom:16px;font-size:14px;" data-i18n="tou_config_title">分时电价时段配置</h4>
+          <table class="data-table" id="touConfigTable"><thead><tr><th data-i18n="tou_period">时段名称</th><th data-i18n="tou_time">时间范围</th><th class="num" data-i18n="tou_rate">电价(RM/kWh)</th><th data-i18n="th_ops">操作</th></tr></thead><tbody>
+            <tr><td><span style="color:var(--danger);font-weight:600;" data-i18n="period_peak">尖峰</span></td><td class="mono" id="touPeakTimeDisplay" style="font-size:12px;">09:00-12:00 / 18:00-21:00</td><td class="num mono" id="touPeakRateDisplay">0.52</td><td><button class="btn-link" onclick="openTouEditModal('peak')" data-i18n="btn_edit">编辑</button></td></tr>
+            <tr><td><span style="color:var(--primary);font-weight:600;" data-i18n="period_flat">平段</span></td><td class="mono" id="touFlatTimeDisplay" style="font-size:12px;">07:00-09:00 / 12:00-18:00 / 21:00-23:00</td><td class="num mono" id="touFlatRateDisplay">0.35</td><td><button class="btn-link" onclick="openTouEditModal('flat')" data-i18n="btn_edit">编辑</button></td></tr>
+            <tr><td><span style="color:var(--accent);font-weight:600;" data-i18n="period_valley">谷段</span></td><td class="mono" id="touValleyTimeDisplay" style="font-size:12px;">23:00-07:00</td><td class="num mono" id="touValleyRateDisplay">0.22</td><td><button class="btn-link" onclick="openTouEditModal('valley')" data-i18n="btn_edit">编辑</button></td></tr>
+          </tbody></table>
+          <div style="margin-top:16px;"><button class="btn btn-primary" onclick="saveTouConfig()" data-i18n="btn_save">&#128190; 保存设置</button></div>
+        </div>
+        <div class="tab-panel" id="tab-tenant-mgmt">
+          <div class="toolbar"><h4 style="font-size:14px;" data-i18n="tenant_mgmt_title">租户信息管理</h4><button class="btn btn-primary btn-sm" onclick="openTenantModal(-1)">+ 新增租户</button></div>
+          <table class="data-table" id="tenantMgmtTable"><thead><tr><th data-i18n="th_tenant">租户</th><th data-i18n="th_meter">表计号</th><th data-i18n="th_contact">联系人</th><th data-i18n="th_phone">联系电话</th><th data-i18n="th_email">邮件地址</th><th class="num" data-i18n="th_contract_cap">合同容量(kW)</th><th data-i18n="th_split_type">分摊方式</th><th data-i18n="th_ops">操作</th></tr></thead><tbody></tbody></table>
+        </div>
+      </div></div>
+    </div>
+  </main>
+</div>
+<!-- MODALS -->
+<div class="modal-overlay" id="thresholdModal"><div class="modal"><div class="modal-header"><h3 data-i18n="modal_threshold_title">&#9881;&#65039; 容量预警阈值配置</h3><button class="modal-close" onclick="closeModal('thresholdModal')">&times;</button></div><div class="modal-body"><div class="form-group"><label class="form-label" data-i18n="threshold_warn">预警阈值 (%)</label><input class="form-input mono" type="number" value="85" id="modalThresholdWarn"><div style="font-size:11px;color:var(--text-muted);margin-top:4px;" data-i18n="threshold_warn_hint">低于此值触发预警</div></div><div class="form-group"><label class="form-label" data-i18n="threshold_danger">危险阈值 (%)</label><input class="form-input mono" type="number" value="70"></div><div class="form-group"><label class="form-label" data-i18n="threshold_overload">过载阈值 (%)</label><input class="form-input mono" type="number" value="100"></div></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('thresholdModal')" data-i18n="btn_cancel">取消</button><button class="btn btn-primary" onclick="saveThreshold()" data-i18n="btn_save">保存</button></div></div></div>
+<div class="modal-overlay" id="billDetailModal"><div class="modal" style="width:700px;"><div class="modal-header"><h3 data-i18n="modal_bill_detail">&#128203; 账单明细</h3><button class="modal-close" onclick="closeModal('billDetailModal')">&times;</button></div><div class="modal-body" id="billDetailContent" style="max-height:60vh;overflow-y:auto;"></div><div class="modal-footer" id="billDetailFooter"><button class="btn btn-outline" onclick="closeModal('billDetailModal')" data-i18n="btn_close">关闭</button><button class="btn btn-primary" onclick="showBillEmailInput()" data-i18n="btn_generate_bill">&#128203; 生成账单</button></div></div></div>
+<div class="modal-overlay" id="billEmailModal"><div class="modal" style="width:450px;"><div class="modal-header"><h3>&#128231; 发送至租户邮箱</h3><button class="modal-close" onclick="closeModal('billEmailModal')">&times;</button></div><div class="modal-body"><div class="form-group"><label class="form-label">租户邮箱</label><input class="form-input" type="email" id="billEmailInput" placeholder="请输入租户邮箱地址"></div><div id="billEmailPreview" style="font-size:12px;color:var(--text-muted);margin-top:8px;"></div></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('billEmailModal')">取消</button><button class="btn btn-primary" onclick="sendBillEmail()">&#128231; 发送PDF账单</button></div></div></div>
+<div class="modal-overlay" id="billHistoryModal"><div class="modal" style="width:750px;"><div class="modal-header"><h3>&#128203; 历史账单记录</h3><button class="modal-close" onclick="closeModal('billHistoryModal')">&times;</button></div><div class="modal-body" id="billHistoryContent" style="max-height:60vh;overflow-y:auto;"></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('billHistoryModal')">关闭</button></div></div></div>
+<div class="modal-overlay" id="tenantModal"><div class="modal" style="width:550px;"><div class="modal-header"><h3 id="tenantModalTitle">&#10133; 新增租户</h3><button class="modal-close" onclick="closeModal('tenantModal')">&times;</button></div><div class="modal-body"><div class="form-group"><label class="form-label" data-i18n="tenant_name">租户名称</label><input class="form-input" type="text" id="tmName" placeholder="请输入租户名称"></div><div class="form-row"><div class="form-group"><label class="form-label" data-i18n="tenant_meter">表计号</label><input class="form-input mono" type="text" id="tmMeter" placeholder="M-XXXX"></div><div class="form-group"><label class="form-label" data-i18n="tenant_contact">联系人</label><input class="form-input" type="text" id="tmContact" placeholder="请输入联系人"></div></div><div class="form-row"><div class="form-group"><label class="form-label" data-i18n="tenant_phone">联系电话</label><input class="form-input mono" type="text" id="tmPhone" placeholder="+60 XX-XXX XXXX"></div><div class="form-group"><label class="form-label" data-i18n="tenant_email">邮件地址</label><input class="form-input" type="email" id="tmEmail" placeholder="email@example.com"></div></div><div class="form-row"><div class="form-group"><label class="form-label" data-i18n="tenant_contract">合同容量(kW)</label><input class="form-input mono" type="number" id="tmContract" placeholder="200"></div><div class="form-group"><label class="form-label" data-i18n="tenant_split">分摊方式</label><select class="form-input" id="tmSplit"><option value="demand" data-i18n="split_by_demand">按需求量</option><option value="area" data-i18n="split_by_area">按面积</option><option value="ratio" data-i18n="split_by_ratio">按比例</option></select></div></div></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('tenantModal')" data-i18n="btn_cancel">取消</button><button class="btn btn-primary" onclick="saveTenant()" data-i18n="btn_confirm">确认</button></div></div></div>
+<div class="modal-overlay" id="touEditModal"><div class="modal" style="width:600px;"><div class="modal-header"><h3 id="touEditTitle">&#9881;&#65039; 编辑时段配置</h3><button class="modal-close" onclick="closeModal('touEditModal')">&times;</button></div><div class="modal-body"><div class="form-group"><label class="form-label" data-i18n="tou_period">时段名称</label><input class="form-input" type="text" id="touEditName" readonly style="background:var(--bg);"></div><div class="form-group"><label class="form-label" data-i18n="tou_time">时间范围</label><div id="touTimeSegments" style="margin-bottom:8px;"></div><button class="btn btn-outline btn-sm" onclick="addTouTimeSegment()" style="font-size:12px;padding:4px 12px;">+ 添加时间段</button></div><div class="form-group"><label class="form-label" data-i18n="tou_rate">电价(RM/kWh)</label><input class="form-input mono" type="number" step="0.01" id="touEditRate" style="width:120px;"></div></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('touEditModal')" data-i18n="btn_cancel">取消</button><button class="btn btn-primary" onclick="saveTouEdit()" data-i18n="btn_confirm">确认保存</button></div></div></div>
+<div class="modal-overlay" id="rateDetailModal"><div class="modal"><div class="modal-header"><h3 data-i18n="modal_rate_detail">&#128202; 费率对比</h3><button class="modal-close" onclick="closeModal('rateDetailModal')">&times;</button></div><div class="modal-body" id="rateDetailContent"></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('rateDetailModal')" data-i18n="btn_close">关闭</button></div></div></div>
+<div class="modal-overlay" id="addRateModal"><div class="modal"><div class="modal-header"><h3 data-i18n="modal_add_rate">&#10133; 新增费率</h3><button class="modal-close" onclick="closeModal('addRateModal')">&times;</button></div><div class="modal-body"><div class="form-group"><label class="form-label" data-i18n="th_eff_month">生效月份</label><input class="form-input" type="month" value="2026-12"></div><div class="form-row"><div class="form-group"><label class="form-label" data-i18n="th_peak_rate">尖峰电价(RM/kWh)</label><input class="form-input mono" type="number" step="0.01" value="0.54"></div><div class="form-group"><label class="form-label" data-i18n="th_flat_rate">平段电价(RM/kWh)</label><input class="form-input mono" type="number" step="0.01" value="0.36"></div></div><div class="form-row"><div class="form-group"><label class="form-label" data-i18n="th_valley_rate">谷段电价(RM/kWh)</label><input class="form-input mono" type="number" step="0.01" value="0.23"></div><div class="form-group"><label class="form-label" data-i18n="th_afa_rate">AFA费率(RM/kWh)</label><input class="form-input mono" type="number" step="0.001" value="0.030"></div></div><div class="form-group"><label class="form-label" data-i18n="remark">备注</label><input class="form-input" type="text" placeholder="选填"></div></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('addRateModal')" data-i18n="btn_cancel">取消</button><button class="btn btn-primary" onclick="addNewRate()" data-i18n="btn_confirm">确认添加</button></div></div></div>
+<script>
+const i18n = {zh:{logo:'电费管理',nav_overview:'总览',nav_capacity:'容量利用率监控',nav_tou:'分时电价拆分',nav_tenant:'租户收费管理',nav_history:'费率历史',nav_settings:'系统设置',page_title_overview:'电费管理总览',page_title_capacity:'容量利用率监控',page_title_tou:'分时电价拆分',page_title_billing:'租户收费管理',page_title_rates:'费率历史',page_title_settings:'系统设置',all_tenants:'全部租户',search_placeholder:'搜索租户/表计...',kpi_contract:'合同预订容量',kpi_actual:'实际最大需量',kpi_util:'容量利用率',kpi_cost:'本月总电费',kpi_stable:'环比持平',kpi_down:'较上月下降',kpi_up:'环比上升',kpi_normal:'正常范围',view_detail:'查看详情',capacity_title:'\u{1F4C8} 容量利用率监控',alert_list:'\u26A0\uFE0F 预警列表',threshold_config:'阈值: 85%',tou_title:'\u{1F550} 分时电价成本拆分',tou_tenant_detail:'各租户分时用电明细',export_billing:'\u{1F4E5} 导出计费依据',billing_title:'\u{1F465} 租户收费管理',gen_bill:'\u{1F4CB} 生成月度账单',export_excel:'\u{1F4E5} 导出 Excel',add_rate:'+ 新增费率',th_tenant:'租户',th_meter:'表计号',th_tenant_meter:'租户/表计',th_contract_cap:'合同容量(kW)',th_actual:'实际需量(kW)',th_util:'利用率(%)',th_status:'状态',th_action:'建议',th_penalty:'预计罚款(RM)',th_suggestion:'建议',th_peak_kwh:'尖峰(kWh)',th_flat_kwh:'平段(kWh)',th_valley_kwh:'谷段(kWh)',th_total_kwh:'总用电(kWh)',th_peak_cost:'尖峰费用(RM)',th_flat_cost:'平段费用(RM)',th_valley_cost:'谷段费用(RM)',th_total_cost:'合计(RM)',th_avg_rate:'均价(RM/kWh)',th_usage:'用电量(kWh)',th_energy_fee:'分时电费(RM)',th_cap_share:'容量分摊(RM)',th_split_type:'分摊方式',th_afa:'AFA附加费(RM)',th_total_due:'应收合计(RM)',th_pay_status:'缴费状态',th_ops:'操作',th_eff_month:'生效月份',th_peak_rate:'尖峰(RM/kWh)',th_flat_rate:'平段(RM/kWh)',th_valley_rate:'谷段(RM/kWh)',th_afa_rate:'AFA(RM/kWh)',th_contact:'联系人',th_phone:'联系电话',th_period_name:'时段名称',th_time_range:'时间范围',th_rate_val:'电价(RM/kWh)',split_by_demand:'按需求量',split_by_area:'按面积',split_by_ratio:'按比例',status_normal:'正常',status_warn:'接近阈值',status_danger:'跌破阈值',status_active:'生效中',status_expired:'已过期',pay_paid:'已缴',pay_pending:'待缴',pay_overdue:'欠费',action_detail:'明细',action_remind:'提醒',action_reconcile:'对账',action_view:'查看',action_trace:'追溯',action_edit:'编辑',action_delete:'删除',total_row:'合计',period_peak:'尖峰',period_flat:'平段',period_valley:'谷段',btn_save:'\u{1F4BE} 保存设置',btn_reset:'\u{1F504} 恢复默认',btn_cancel:'取消',btn_close:'关闭',btn_confirm:'确认添加',btn_edit:'编辑',btn_refresh:'\u{1F504} 刷新',btn_export:'\u{1F4E5} 导出',btn_add_tenant:'+ 新增租户',btn_send_bill:'发送账单',filter_status:'筛选状态:',filter_split:'分摊方式:',filter_all:'全部',cap_kpi_total:'总合同容量',cap_kpi_tenants:'租户',cap_kpi_peak:'本月峰值需量',cap_kpi_avg_util:'平均利用率',cap_kpi_stable:'整体平稳',cap_kpi_penalty:'预计罚款',cap_kpi_2tenants:'2户低于阈值',cap_trend_title:'\u{1F4C8} 各租户容量利用率趋势（近12个月）',cap_compare_title:'\u{1F4CA} 租户容量对比',cap_util_dist:'\u{1F3AF} 利用率分布',cap_detail_title:'\u{1F4CB} 容量利用明细表',tou_kpi_peak:'尖峰电费',tou_kpi_flat:'平段电费',tou_kpi_valley:'谷段电费',tou_kpi_total:'本月总电费',tou_trend_title:'\u{1F4C8} 分时用电趋势（近6个月）',tou_cost_pie:'\u{1F4B0} 成本占比分析',tou_tenant_pie:'\u{1F3E2} 租户用电占比',tou_detail_title:'\u{1F4CB} 各租户分时用电明细',bill_kpi_billed:'已出账单',bill_kpi_bills:'笔账单',bill_kpi_collected:'已收款',bill_kpi_rate:'收款率',bill_kpi_pending:'待收款',bill_kpi_pending_bills:'笔待缴',bill_kpi_overdue:'逾期未缴',bill_kpi_overdue_bills:'笔欠费',bill_mgmt_title:'\u{1F465} 租户收费管理',bill_trend_title:'\u{1F4CA} 月度收费趋势',bill_status_pie:'\u{1F4B0} 缴费状态分布',rate_kpi_peak:'当前尖峰电价',rate_kpi_flat:'当前平段电价',rate_kpi_valley:'当前谷段电价',rate_kpi_afa:'当前AFA费率',rate_kpi_vs_last:'较上期',rate_trend_title:'\u{1F4C8} 电价变化趋势',rate_history_title:'\u{1F4CB} 费率历史记录',rate_audit_title:'\u{1F4DD} 费率变更日志',settings_title:'\u2699\uFE0F 系统设置',tab_threshold:'阈值设置',tab_tou_config:'分时配置',tab_tenant_mgmt:'租户管理',tab_notification:'通知设置',tab_sysinfo:'系统信息',threshold_title:'容量预警阈值配置',threshold_warn:'预警阈值 (%)',threshold_danger:'危险阈值 (%)',threshold_overload:'过载阈值 (%)',threshold_penalty:'罚款起算点 (%)',threshold_warn_hint:'低于此值触发预警',tou_config_title:'分时电价时段配置',tenant_mgmt_title:'租户信息管理',notif_settings_title:'通知偏好设置',notif_capacity_warn:'容量预警通知',notif_capacity_warn_desc:'当租户容量利用率低于阈值时发送通知',notif_bill_remind:'账单到期提醒',notif_bill_remind_desc:'在账单到期前3天自动发送提醒',notif_overdue:'逾期缴费通知',notif_overdue_desc:'逾期超过7天自动发送催缴通知',notif_rate_change:'费率变更通知',notif_rate_change_desc:'电价调整时通知所有租户',notif_email:'邮件通知',notif_email_desc:'通过邮件发送通知（需配置SMTP）',notif_sms:'短信通知',notif_sms_desc:'通过短信发送紧急通知',sysinfo_title:'系统信息',sysinfo_version:'系统版本',sysinfo_last_update:'最后更新',sysinfo_data_range:'数据范围',sysinfo_tenant_count:'租户数量',sysinfo_meter_count:'电表数量',sysinfo_storage:'数据存储',sysinfo_sync:'\u{1F504} 手动同步数据',sysinfo_cache:'\u{1F9F9} 清理缓存',sysinfo_backup:'\u{1F4BE} 数据备份',sysinfo_reset:'\u26A0\uFE0F 重置系统',modal_threshold_title:'\u2699\uFE0F 容量预警阈值配置',modal_bill_detail:'\u{1F4CB} 账单明细',modal_rate_detail:'\u{1F4CA} 费率对比',modal_add_rate:'\u2795 新增费率',remark:'备注',action_suggest_raise:'建议提升容量',action_suggest_monitor:'持续监控',action_suggest_optimize:'优化排产',action_suggest_reduce:'建议减容',months:['6月','7月','8月','9月','10月','11月'],months_12:['12月','1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月'],chart_peak:'尖峰',chart_flat:'平段',chart_valley:'谷段',chart_util:'利用率',chart_penalty:'罚款线(85%)',chart_full:'100%线',cost_share:'本月各时段成本占比',chart_contract:'合同容量',chart_actual:'实际需量',chart_billed:'应收',chart_collected:'已收',audit_1:'新增费率 2026-11，尖峰 0.50\u21920.52',audit_2:'新增费率 2026-09，尖峰 0.48\u21920.50',audit_3:'新增费率 2026-06，AFA 0.028\u21920.030',audit_4:'新增费率 2026-03，全线上调约2%',audit_5:'新增费率 2025-12，系统初始化',bd_tenant:'租户',bd_meter:'表计号',bd_usage:'用电量',bd_energy:'分时电费',bd_capacity:'容量分摊',bd_afa:'AFA附加费',bd_total:'应收合计',bd_status:'缴费状态',bd_month:'账单月份',bd_due_date:'到期日',refreshing:'数据刷新中...'},en:{logo:'Power Mgmt',nav_overview:'Overview',nav_capacity:'Capacity Monitor',nav_tou:'TOU Breakdown',nav_tenant:'Tenant Billing',nav_history:'Rate History',nav_settings:'Settings',page_title_overview:'Electricity Overview',page_title_capacity:'Capacity Monitoring',page_title_tou:'TOU Cost Breakdown',page_title_billing:'Tenant Billing',page_title_rates:'Rate History',page_title_settings:'System Settings',all_tenants:'All Tenants',search_placeholder:'Search tenant/meter...',kpi_contract:'Contracted Capacity',kpi_actual:'Actual Peak Demand',kpi_util:'Utilization Rate',kpi_cost:'Monthly Bill',kpi_stable:'Stable',kpi_down:'Decreased',kpi_up:'Increased',kpi_normal:'Normal',view_detail:'Details',capacity_title:'\u{1F4C8} Capacity Utilization',alert_list:'\u26A0\uFE0F Alerts',threshold_config:'Threshold: 85%',tou_title:'\u{1F550} TOU Cost Split',tou_tenant_detail:'Tenant TOU Details',export_billing:'\u{1F4E5} Export Billing',billing_title:'\u{1F465} Tenant Billing',gen_bill:'\u{1F4CB} Generate Bill',export_excel:'\u{1F4E5} Export Excel',add_rate:'+ Add Rate',th_tenant:'Tenant',th_meter:'Meter',th_tenant_meter:'Tenant/Meter',th_contract_cap:'Contract(kW)',th_actual:'Actual(kW)',th_util:'Util(%)',th_status:'Status',th_action:'Action',th_penalty:'Penalty(RM)',th_suggestion:'Suggestion',th_peak_kwh:'Peak(kWh)',th_flat_kwh:'Flat(kWh)',th_valley_kwh:'Valley(kWh)',th_total_kwh:'Total(kWh)',th_peak_cost:'Peak(RM)',th_flat_cost:'Flat(RM)',th_valley_cost:'Valley(RM)',th_total_cost:'Total(RM)',th_avg_rate:'Avg(RM/kWh)',th_usage:'Usage(kWh)',th_energy_fee:'Energy(RM)',th_cap_share:'Capacity(RM)',th_split_type:'Split',th_afa:'AFA(RM)',th_total_due:'Total Due(RM)',th_pay_status:'Status',th_ops:'Actions',th_eff_month:'Month',th_peak_rate:'Peak(RM/kWh)',th_flat_rate:'Flat(RM/kWh)',th_valley_rate:'Valley(RM/kWh)',th_afa_rate:'AFA(RM/kWh)',th_contact:'Contact',th_phone:'Phone',th_period_name:'Period',th_time_range:'Time Range',th_rate_val:'Rate(RM/kWh)',split_by_demand:'By Demand',split_by_area:'By Area',split_by_ratio:'By Ratio',status_normal:'Normal',status_warn:'Warning',status_danger:'Critical',status_active:'Active',status_expired:'Expired',pay_paid:'Paid',pay_pending:'Pending',pay_overdue:'Overdue',action_detail:'Detail',action_remind:'Remind',action_reconcile:'Reconcile',action_view:'View',action_trace:'Trace',action_edit:'Edit',action_delete:'Delete',total_row:'Total',period_peak:'Peak',period_flat:'Flat',period_valley:'Valley',btn_save:'\u{1F4BE} Save',btn_reset:'\u{1F504} Reset',btn_cancel:'Cancel',btn_close:'Close',btn_confirm:'Confirm',btn_edit:'Edit',btn_refresh:'\u{1F504} Refresh',btn_export:'\u{1F4E5} Export',btn_add_tenant:'+ Add Tenant',btn_send_bill:'Send Bill',filter_status:'Status:',filter_split:'Split:',filter_all:'All',cap_kpi_total:'Total Contract',cap_kpi_tenants:'Tenants',cap_kpi_peak:'Peak Demand',cap_kpi_avg_util:'Avg Utilization',cap_kpi_stable:'Stable',cap_kpi_penalty:'Est. Penalty',cap_kpi_2tenants:'2 below threshold',cap_trend_title:'\u{1F4C8} Tenant Capacity Trend (12 Months)',cap_compare_title:'\u{1F4CA} Capacity Comparison',cap_util_dist:'\u{1F3AF} Utilization Distribution',cap_detail_title:'\u{1F4CB} Capacity Detail Table',tou_kpi_peak:'Peak Cost',tou_kpi_flat:'Flat Cost',tou_kpi_valley:'Valley Cost',tou_kpi_total:'Total Bill',tou_trend_title:'\u{1F4C8} TOU Trend (6 Months)',tou_cost_pie:'\u{1F4B0} Cost Share',tou_tenant_pie:'\u{1F3E2} Tenant Usage Share',tou_detail_title:'\u{1F4CB} Tenant TOU Details',bill_kpi_billed:'Billed',bill_kpi_bills:'bills',bill_kpi_collected:'Collected',bill_kpi_rate:'Collection Rate',bill_kpi_pending:'Pending',bill_kpi_pending_bills:'pending',bill_kpi_overdue:'Overdue',bill_kpi_overdue_bills:'overdue',bill_mgmt_title:'\u{1F465} Tenant Billing Management',bill_trend_title:'\u{1F4CA} Monthly Billing Trend',bill_status_pie:'\u{1F4B0} Payment Status',rate_kpi_peak:'Current Peak Rate',rate_kpi_flat:'Current Flat Rate',rate_kpi_valley:'Current Valley Rate',rate_kpi_afa:'Current AFA Rate',rate_kpi_vs_last:'vs previous',rate_trend_title:'\u{1F4C8} Rate Trend',rate_history_title:'\u{1F4CB} Rate History',rate_audit_title:'\u{1F4DD} Rate Audit Log',settings_title:'\u2699\uFE0F System Settings',tab_threshold:'Thresholds',tab_tou_config:'TOU Config',tab_tenant_mgmt:'Tenants',tab_notification:'Notifications',tab_sysinfo:'System Info',threshold_title:'Capacity Alert Thresholds',threshold_warn:'Warning Threshold (%)',threshold_danger:'Danger Threshold (%)',threshold_overload:'Overload Threshold (%)',threshold_penalty:'Penalty Trigger (%)',threshold_warn_hint:'Alert when below this value',tou_config_title:'TOU Period Configuration',tenant_mgmt_title:'Tenant Management',notif_settings_title:'Notification Preferences',notif_capacity_warn:'Capacity Alert',notif_capacity_warn_desc:'Notify when utilization drops below threshold',notif_bill_remind:'Bill Reminder',notif_bill_remind_desc:'Auto-remind 3 days before due date',notif_overdue:'Overdue Notice',notif_overdue_desc:'Auto-notify after 7 days overdue',notif_rate_change:'Rate Change Notice',notif_rate_change_desc:'Notify all tenants on rate adjustment',notif_email:'Email Notification',notif_email_desc:'Send notifications via email (SMTP required)',notif_sms:'SMS Notification',notif_sms_desc:'Send urgent notifications via SMS',sysinfo_title:'System Information',sysinfo_version:'Version',sysinfo_last_update:'Last Update',sysinfo_data_range:'Data Range',sysinfo_tenant_count:'Tenants',sysinfo_meter_count:'Meters',sysinfo_storage:'Storage',sysinfo_sync:'\u{1F504} Sync Data',sysinfo_cache:'\u{1F9F9} Clear Cache',sysinfo_backup:'\u{1F4BE} Backup Data',sysinfo_reset:'\u26A0\uFE0F Reset System',modal_threshold_title:'\u2699\uFE0F Threshold Configuration',modal_bill_detail:'\u{1F4CB} Bill Detail',modal_rate_detail:'\u{1F4CA} Rate Comparison',modal_add_rate:'\u2795 Add New Rate',remark:'Remark',action_suggest_raise:'Raise capacity',action_suggest_monitor:'Monitor',action_suggest_optimize:'Optimize scheduling',action_suggest_reduce:'Reduce capacity',months:['Jun','Jul','Aug','Sep','Oct','Nov'],months_12:['Dec','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov'],chart_peak:'Peak',chart_flat:'Flat',chart_valley:'Valley',chart_util:'Utilization',chart_penalty:'Penalty(85%)',chart_full:'100%',cost_share:'Monthly Cost Share',chart_contract:'Contract',chart_actual:'Actual',chart_billed:'Billed',chart_collected:'Collected',audit_1:'New rate 2026-11, peak 0.50\u21920.52',audit_2:'New rate 2026-09, peak 0.48\u21920.50',audit_3:'New rate 2026-06, AFA 0.028\u21920.030',audit_4:'New rate 2026-03, all rates +2%',audit_5:'New rate 2025-12, system init',bd_tenant:'Tenant',bd_meter:'Meter',bd_usage:'Usage',bd_energy:'Energy Fee',bd_capacity:'Capacity Share',bd_afa:'AFA Fee',bd_total:'Total Due',bd_status:'Status',bd_month:'Bill Month',bd_due_date:'Due Date',refreshing:'Refreshing data...'}};
+i18n.zh.cap_kpi_peak='实际最大需量';i18n.zh.cap_kpi_avg_util='容量利用率';i18n.zh.cap_kpi_2tenants='户过载';
+i18n.zh.status_warning='阈值预警';i18n.zh.status_danger='阈值危险';i18n.zh.status_overload='阈值过载';
+i18n.zh.action_suggest_normal='利用率良好';i18n.zh.action_suggest_monitor='关注利用率';i18n.zh.action_suggest_overload='立即减容或扩容';
+i18n.en.cap_kpi_peak='Total Actual Demand';i18n.en.cap_kpi_avg_util='Capacity Utilization';i18n.en.cap_kpi_2tenants=' overloaded';
+i18n.en.status_warning='Threshold Warning';i18n.en.status_danger='Threshold Danger';i18n.en.status_overload='Overload';
+i18n.en.action_suggest_normal='Good utilization';i18n.en.action_suggest_monitor='Monitor utilization';i18n.en.action_suggest_overload='Reduce load or expand';
+i18n.zh.btn_generate_bill='📋 生成账单';i18n.zh.action_history='查看历史';i18n.zh.th_email='邮件地址';i18n.zh.bill_email_title='📧 发送至租户邮箱';i18n.zh.bill_email_label='租户邮箱';i18n.zh.bill_email_placeholder='请输入租户邮箱地址';i18n.zh.bill_email_send='📧 发送PDF账单';i18n.zh.bill_history_title='📋 历史账单记录';i18n.zh.bill_month='账单月份';i18n.zh.bill_usage='用电量(kWh)';i18n.zh.bill_energy='电费(RM)';i18n.zh.bill_cap='容量分摊(RM)';i18n.zh.bill_afa='AFA(RM)';i18n.zh.bill_total='合计(RM)';i18n.zh.bill_status='缴费状态';i18n.zh.bill_due='到期日';i18n.zh.tenant_add_title='➕ 新增租户';i18n.zh.tenant_edit_title='✏️ 编辑租户';i18n.zh.tenant_name='租户名称';i18n.zh.tenant_meter='表计号';i18n.zh.tenant_contact='联系人';i18n.zh.tenant_phone='联系电话';i18n.zh.tenant_email='邮件地址';i18n.zh.tenant_contract='合同容量(kW)';i18n.zh.tenant_split='分摊方式';i18n.zh.tou_period='时段名称';i18n.zh.tou_time='时间范围';i18n.zh.tou_rate='电价(RM/kWh)';i18n.zh.btn_add='添加';i18n.zh.msg_email_sent='账单已发送至';i18n.zh.msg_tenant_added='租户已添加';i18n.zh.msg_tenant_edited='租户信息已更新';i18n.zh.msg_tou_saved='分时配置已保存';
+i18n.en.btn_generate_bill='📋 Generate Bill';i18n.en.action_history='History';i18n.en.th_email='Email';i18n.en.bill_email_title='📧 Send to Tenant Email';i18n.en.bill_email_label='Tenant Email';i18n.en.bill_email_placeholder='Enter tenant email address';i18n.en.bill_email_send='📧 Send PDF Bill';i18n.en.bill_history_title='📋 Billing History';i18n.en.bill_month='Month';i18n.en.bill_usage='Usage(kWh)';i18n.en.bill_energy='Energy(RM)';i18n.en.bill_cap='Capacity(RM)';i18n.en.bill_afa='AFA(RM)';i18n.en.bill_total='Total(RM)';i18n.en.bill_status='Status';i18n.en.bill_due='Due Date';i18n.en.tenant_add_title='➕ Add Tenant';i18n.en.tenant_edit_title='✏️ Edit Tenant';i18n.en.tenant_name='Tenant Name';i18n.en.tenant_meter='Meter No';i18n.en.tenant_contact='Contact';i18n.en.tenant_phone='Phone';i18n.en.tenant_email='Email';i18n.en.tenant_contract='Contract(kW)';i18n.en.tenant_split='Split Type';i18n.en.tou_period='Period';i18n.en.tou_time='Time Range';i18n.en.tou_rate='Rate(RM/kWh)';i18n.en.btn_add='Add';i18n.en.msg_email_sent='Bill sent to';i18n.en.msg_tenant_added='Tenant added';i18n.en.msg_tenant_edited='Tenant updated';i18n.en.msg_tou_saved='TOU config saved';
+
+let currentLang = 'zh';
+let currentPage = 'overview';
+const allMonths = ['2026-01','2026-02','2026-03','2026-04','2026-05','2026-06','2026-07','2026-08','2026-09','2026-10','2026-11'];
+let selectedMonths = ['2026-11'];
+let selectedTenants = ['all'];
+
+function t(k) { return i18n[currentLang][k] || k; }
+
+const baseTenants = [
+  { name:'星辰科技', meter:'M-1001', contract:300, split:'demand', contact:'张伟', phone:'+60 12-111 0001', email:'zhangwei@xingchen.com' },
+  { name:'蓝海物流', meter:'M-1002', contract:250, split:'area', contact:'李明', phone:'+60 12-222 0002', email:'liming@lanhai.com' },
+  { name:'鼎盛制造', meter:'M-1003', contract:350, split:'demand', contact:'王芳', phone:'+60 12-333 0003', email:'wangfang@dingsheng.com' },
+  { name:'云帆数据', meter:'M-1004', contract:200, split:'ratio', contact:'陈杰', phone:'+60 12-444 0004', email:'chenjie@yunfan.com' },
+  { name:'万象商贸', meter:'M-1005', contract:100, split:'area', contact:'赵丽', phone:'+60 12-555 0005', email:'zhaoli@wanxiang.com' }
+];
+
+const monthProfiles = {};
+(function() {
+  const bA=[289,218,336,168,81], bU=[96.3,87.2,96.0,84.0,81.0];
+  const bP=[4200,3100,5800,2400,1500], bF=[5100,4200,6200,3100,2000], bV=[2800,1900,3500,1600,900];
+  const bS=[['paid','pending','paid','overdue','pending'],['paid','paid','paid','pending','pending'],['paid','pending','paid','paid','overdue'],['paid','paid','pending','overdue','pending']];
+  allMonths.forEach((m, idx) => {
+    const f = 0.72 + (idx/10)*0.28;
+    const n = i => Math.sin(idx*0.8+i)*0.04;
+    monthProfiles[m] = {
+      actuals: bA.map((v,i) => Math.round(v*f*(1+n(i)))),
+      utils: bU.map((v,i) => +(v*f*(1+Math.sin(idx*0.6+i*0.5)*0.03)).toFixed(1)),
+      touPk: bP.map((v,i) => Math.round(v*f*(1+Math.sin(idx+i)*0.02))),
+      touFt: bF.map((v,i) => Math.round(v*f*(1+Math.cos(idx+i)*0.02))),
+      touVl: bV.map((v,i) => Math.round(v*f*(1+Math.sin(idx*1.5+i)*0.02))),
+      billStatus: bS[idx%bS.length],
+      prevCost: Math.round(70000+(idx/10)*16000+Math.sin(idx)*2000)
+    };
+  });
+})();
+
+const allRateData = [
+  { month:'2026-11', peak:0.52, flat:0.35, valley:0.22, afa:0.030 },
+  { month:'2026-09', peak:0.50, flat:0.34, valley:0.21, afa:0.030 },
+  { month:'2026-06', peak:0.48, flat:0.33, valley:0.20, afa:0.028 },
+  { month:'2026-03', peak:0.47, flat:0.32, valley:0.19, afa:0.028 },
+  { month:'2025-12', peak:0.45, flat:0.31, valley:0.18, afa:0.025 }
+];
+function getRateForMonth(month) {
+  let rate = allRateData[allRateData.length-1];
+  for (let i=0; i<allRateData.length; i++) { if (allRateData[i].month <= month) { rate = allRateData[i]; break; } }
+  return rate;
+}
+const rateAuditLog = [
+  { time:'2026-10-28 14:30', key:'audit_1' },
+  { time:'2026-08-15 09:00', key:'audit_2' },
+  { time:'2026-05-20 16:45', key:'audit_3' },
+  { time:'2026-02-10 11:20', key:'audit_4' },
+  { time:'2025-11-30 08:00', key:'audit_5' }
+];
+
+let tenants=[], billingData=[], touDetailData=[], rateData=[];
+let pkRate=0.52, ftRate=0.35, vlRate=0.22;
+const splitLabels={demand:'split_by_demand',area:'split_by_area',ratio:'split_by_ratio'};
+const splitClasses={demand:'demand',area:'area',ratio:'ratio'};
+const statusLabels={paid:'pay_paid',pending:'pay_pending',overdue:'pay_overdue'};
+const statusClasses={paid:'badge-green',pending:'badge-amber',overdue:'badge-red'};
+
+function getStatus(u){if(u>=100)return{cls:'badge-red',key:'status_overload'};if(u>=85)return{cls:'badge-orange',key:'status_warning'};if(u>=70)return{cls:'badge-yellow',key:'status_danger'};return{cls:'badge-green',key:'status_normal'};}
+function getSuggestion(u){if(u>=100)return'action_suggest_overload';if(u>=85)return'action_suggest_raise';if(u>=70)return'action_suggest_monitor';return'action_suggest_normal';}
+function calcPenalty(t){if(t.util>=85)return 0;return Math.round((t.contract*0.85-t.actual)*18);}
+function fmt(n){return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+
+function getActiveMonths(){
+  if(selectedMonths.includes('all')) return [...allMonths];
+  return selectedMonths.filter(m=>m!=='all').sort();
+}
+function getActiveTenantIndices(){
+  if(selectedTenants.includes('all')) return [0,1,2,3,4];
+  return selectedTenants.map(name=>baseTenants.findIndex(b=>b.name===name)).filter(i=>i>=0);
+}
+
+function regenerateData(){
+  const months=getActiveMonths(), lastMonth=months[months.length-1];
+  const profile=monthProfiles[lastMonth], rate=getRateForMonth(lastMonth);
+  pkRate=rate.peak; ftRate=rate.flat; vlRate=rate.valley;
+  rateData=allRateData.filter(r=>r.month<=lastMonth).sort((a,b)=>b.month.localeCompare(a.month));
+  if(rateData.length===0) rateData=[allRateData[allRateData.length-1]];
+  const tIdxs=getActiveTenantIndices();
+
+  if(months.length===1){
+    const m=months[0], mp=monthProfiles[m], r=getRateForMonth(m);
+    tenants=tIdxs.map(i=>({...baseTenants[i],actual:mp.actuals[i],util:mp.utils[i],_idx:i}));
+    touDetailData=tIdxs.map(i=>({tenant:baseTenants[i].name,pk:mp.touPk[i],ft:mp.touFt[i],vl:mp.touVl[i]}));
+    billingData=tIdxs.map(i=>{
+      const bt=baseTenants[i],td=touDetailData.find(t=>t.tenant===bt.name);
+      const usage=td.pk+td.ft+td.vl;
+      const energyFee=Math.round(td.pk*r.peak+td.ft*r.flat+td.vl*r.valley);
+      const totalCap=tIdxs.reduce((s,j)=>s+baseTenants[j].contract,0);
+      let capShare=0;
+      if(bt.split==='demand')capShare=Math.round(energyFee*0.2*(mp.actuals[i]/mp.actuals.reduce((a,b)=>a+b,0)));
+      else if(bt.split==='area')capShare=Math.round(energyFee*0.2*(bt.contract/totalCap));
+      else capShare=Math.round(energyFee*0.2*0.2);
+      const afa=Math.round(usage*r.afa);
+      return{tenant:bt.name,meter:bt.meter,usage,energyFee,capShare,split:bt.split,afa,total:energyFee+capShare+afa,status:mp.billStatus[i]};
+    });
+  } else {
+    tenants=tIdxs.map(i=>{
+      let tA=0,tU=0;
+      months.forEach(m=>{tA+=monthProfiles[m].actuals[i];tU+=monthProfiles[m].utils[i];});
+      return{...baseTenants[i],actual:Math.round(tA/months.length),util:+(tU/months.length).toFixed(1),_idx:i};
+    });
+    touDetailData=tIdxs.map(i=>{
+      let tp=0,tf=0,tv=0;
+      months.forEach(m=>{tp+=monthProfiles[m].touPk[i];tf+=monthProfiles[m].touFt[i];tv+=monthProfiles[m].touVl[i];});
+      return{tenant:baseTenants[i].name,pk:Math.round(tp/months.length),ft:Math.round(tf/months.length),vl:Math.round(tv/months.length)};
+    });
+    const lastMp=monthProfiles[lastMonth],lastRate=getRateForMonth(lastMonth);
+    billingData=tIdxs.map(i=>{
+      const bt=baseTenants[i],td=touDetailData.find(t=>t.tenant===bt.name);
+      const usage=td.pk+td.ft+td.vl;
+      const energyFee=Math.round(td.pk*lastRate.peak+td.ft*lastRate.flat+td.vl*lastRate.valley);
+      const totalCap=tIdxs.reduce((s,j)=>s+baseTenants[j].contract,0);
+      let capShare=0;
+      if(bt.split==='demand')capShare=Math.round(energyFee*0.2*(lastMp.actuals[i]/lastMp.actuals.reduce((a,b)=>a+b,0)));
+      else if(bt.split==='area')capShare=Math.round(energyFee*0.2*(bt.contract/totalCap));
+      else capShare=Math.round(energyFee*0.2*0.2);
+      const afa=Math.round(usage*lastRate.afa);
+      return{tenant:bt.name,meter:bt.meter,usage,energyFee,capShare,split:bt.split,afa,total:energyFee+capShare+afa,status:lastMp.billStatus[i]};
+    });
+  }
+}
+
+function updateTrend(elId,pct,isNeutral){
+  const el=document.getElementById(elId); if(!el)return;
+  if(isNeutral){el.className='kpi-trend neutral';el.innerHTML='<span>\u2014</span><span data-i18n="kpi_stable">'+t('kpi_stable')+'</span>';return;}
+  if(Math.abs(pct)<0.5){el.className='kpi-trend neutral';el.innerHTML='<span>\u2014</span><span>'+t('kpi_stable')+'</span>';}
+  else if(pct>0){el.className='kpi-trend up';el.innerHTML='<span>\u2191 '+Math.abs(pct).toFixed(1)+'%</span><span>'+t('kpi_up')+'</span>';}
+  else{el.className='kpi-trend down';el.innerHTML='<span>\u2193 '+Math.abs(pct).toFixed(1)+'%</span><span>'+t('kpi_down')+'</span>';}
+}
+function updateTrendKpiUtil(util){
+  const el=document.getElementById('kpiUtilTrend'); if(!el)return;
+  if(util>=100){el.className='kpi-trend up';el.style.background='';el.style.color='';el.innerHTML='<span>'+t('status_overload')+'</span>';}
+  else if(util>=85){el.className='kpi-trend neutral';el.style.background='#FFF7ED';el.style.color='#C2410C';el.innerHTML='<span>'+t('status_warning')+'</span>';}
+  else if(util>=70){el.className='kpi-trend neutral';el.style.background='#FEFCE8';el.style.color='#A16207';el.innerHTML='<span>'+t('status_danger')+'</span>';}
+  else{el.className='kpi-trend neutral';el.style.background='var(--accent-light)';el.style.color='#065F46';el.innerHTML='<span>'+t('kpi_normal')+'</span>';}
+}
+
+function updateOverviewKPIs(){
+  const at=getActiveTenantIndices(), months=getActiveMonths(), lastMonth=months[months.length-1];
+  const profile=monthProfiles[lastMonth];
+  let contract=at.reduce((s,i)=>s+baseTenants[i].contract,0);
+  let actual=tenants.reduce((s,t)=>s+t.actual,0);
+  let util=contract>0?(actual/contract*100):0;
+  let cost=billingData.reduce((s,b)=>s+b.total,0);
+  document.getElementById('kpiContract').innerHTML=fmt(contract)+'<span class="kpi-unit">kW</span>';
+  document.getElementById('kpiActual').innerHTML=fmt(actual)+'<span class="kpi-unit">kW</span>';
+  document.getElementById('kpiUtil').innerHTML=util.toFixed(1)+'<span class="kpi-unit">%</span>';
+  document.getElementById('kpiCost').textContent='RM '+fmt(Math.round(cost));
+  let prevActual=0;
+  if(months.length>1){const pm=months[months.length-2];prevActual=at.reduce((s,i)=>s+monthProfiles[pm].actuals[i],0);}
+  else{const mi=allMonths.indexOf(lastMonth);if(mi>0){const pm=allMonths[mi-1];prevActual=at.reduce((s,i)=>s+monthProfiles[pm].actuals[i],0);}}
+  const actualDiff=prevActual>0?((actual-prevActual)/prevActual*100):0;
+  updateTrend('kpiContractTrend',0,true);
+  updateTrend('kpiActualTrend',actualDiff,false);
+  updateTrendKpiUtil(util);
+  let prevCost=0;
+  if(months.length>1){const pm=months[months.length-2];const pr=getRateForMonth(pm);prevCost=at.reduce((s,i)=>{const p=monthProfiles[pm];return s+p.touPk[i]*pr.peak+p.touFt[i]*pr.flat+p.touVl[i]*pr.valley;},0);}
+  const costDiff=prevCost>0?((cost-prevCost)/prevCost*100):0;
+  updateTrend('kpiCostTrend',costDiff,false);
+  const ringPct=Math.min(util,100),circumference=2*Math.PI*30,offset=circumference*(1-ringPct/100);
+  const arc=document.getElementById('kpiRingArc'),ringText=document.getElementById('kpiRingText');
+  if(arc){arc.setAttribute('stroke-dasharray',circumference.toFixed(1));arc.setAttribute('stroke-dashoffset',offset.toFixed(1));arc.setAttribute('stroke',ringPct>=100?'#DC2626':ringPct>=85?'#F59E0B':ringPct>=70?'#EAB308':'#0E9F6E');}
+  if(ringText)ringText.textContent=util.toFixed(0)+'%';
+}
+
+function updateCapacityKPIs(){
+  const totalContract=tenants.reduce((s,t)=>s+t.contract,0);
+  const totalActual=tenants.reduce((s,t)=>s+t.actual,0);
+  const months=getActiveMonths();
+  const at=getActiveTenantIndices();
+  let peakActual=0;
+  months.forEach(m=>{const mp=monthProfiles[m];at.forEach(i=>{if(mp.actuals[i]>peakActual)peakActual=mp.actuals[i];});});
+  const capUtil=totalContract>0?(totalActual/totalContract*100):0;
+  const totalPenalty=tenants.reduce((s,t)=>s+calcPenalty(t),0);
+  const overloadCount=tenants.filter(t=>t.util>=100).length;
+  document.getElementById('capKpiTotal').innerHTML=fmt(totalContract)+'<span class="kpi-unit">kW</span>';
+  document.getElementById('capKpiTenantCount').textContent=tenants.length;
+  document.getElementById('capKpiPeak').innerHTML=fmt(totalActual)+'<span class="kpi-unit">kW</span>';
+  document.getElementById('capKpiAvgUtil').innerHTML=capUtil.toFixed(1)+'<span class="kpi-unit">%</span>';
+  document.getElementById('capKpiPenalty').innerHTML='RM '+fmt(totalPenalty);
+  if(months.length>1){
+    const pm=months[months.length-2];
+    const prevTotalActual=at.reduce((s,i)=>s+monthProfiles[pm].actuals[i],0);
+    const diff=totalActual-prevTotalActual;
+    const el=document.getElementById('capKpiPeakTrend');
+    if(Math.abs(diff)<5){el.className='kpi-trend neutral';el.innerHTML='<span>\u2212</span><span>'+t('kpi_stable')+'</span>';}
+    else if(diff>0){el.className='kpi-trend up';el.innerHTML='<span>\u2191 '+diff+'kW</span><span>'+t('kpi_up')+'</span>';}
+    else{el.className='kpi-trend down';el.innerHTML='<span>\u2193 '+Math.abs(diff)+'kW</span><span>'+t('kpi_down')+'</span>';}
+  }
+  document.getElementById('capKpiBelowCount').textContent=overloadCount+t('cap_kpi_2tenants');
+}
+
+function updateTouKPIs(){
+  let tPk=0,tFt=0,tVl=0;
+  touDetailData.forEach(d=>{tPk+=d.pk;tFt+=d.ft;tVl+=d.vl;});
+  const pkCost=Math.round(tPk*pkRate),ftCost=Math.round(tFt*ftRate),vlCost=Math.round(tVl*vlRate);
+  const totalCost=pkCost+ftCost+vlCost;
+  document.getElementById('touKpiPeak').textContent='RM '+fmt(pkCost);
+  document.getElementById('touKpiFlat').textContent='RM '+fmt(ftCost);
+  document.getElementById('touKpiValley').textContent='RM '+fmt(vlCost);
+  document.getElementById('touKpiTotal').textContent='RM '+fmt(totalCost);
+  document.getElementById('periodPeakRate').innerHTML='RM '+pkRate.toFixed(2)+'<span style="font-size:12px;color:var(--text-muted);">/kWh</span>';
+  document.getElementById('periodFlatRate').innerHTML='RM '+ftRate.toFixed(2)+'<span style="font-size:12px;color:var(--text-muted);">/kWh</span>';
+  document.getElementById('periodValleyRate').innerHTML='RM '+vlRate.toFixed(2)+'<span style="font-size:12px;color:var(--text-muted);">/kWh</span>';
+  const months=getActiveMonths();
+  if(months.length>1){
+    const pm=months[months.length-2],pr=getRateForMonth(pm),pp=monthProfiles[pm];
+    const at=getActiveTenantIndices();
+    let pPk=0,pFt=0,pVl=0;
+    at.forEach(i=>{pPk+=pp.touPk[i];pFt+=pp.touFt[i];pVl+=pp.touVl[i];});
+    const pPkCost=pPk*pr.peak,pFtCost=pFt*pr.flat,pVlCost=pVl*pr.valley;
+    updateTrend('touKpiPeakTrend',pPkCost>0?(pkCost-pPkCost)/pPkCost*100:false);
+    updateTrend('touKpiFlatTrend',pFtCost>0?(ftCost-pFtCost)/pFtCost*100:false);
+    updateTrend('touKpiValleyTrend',pVlCost>0?(vlCost-pVlCost)/pVlCost*100:false);
+    updateTrend('touKpiTotalTrend',pp.prevCost>0?(totalCost-pp.prevCost)/pp.prevCost*100:false);
+  }
+}
+
+function updateBillingKPIs(){
+  const totalBilled=billingData.reduce((s,b)=>s+b.total,0);
+  const collected=billingData.filter(b=>b.status==='paid').reduce((s,b)=>s+b.total,0);
+  const pending=billingData.filter(b=>b.status==='pending').reduce((s,b)=>s+b.total,0);
+  const overdue=billingData.filter(b=>b.status==='overdue').reduce((s,b)=>s+b.total,0);
+  const collRate=totalBilled>0?(collected/totalBilled*100):0;
+  document.getElementById('billKpiBilled').textContent='RM '+fmt(Math.round(totalBilled));
+  document.getElementById('billKpiBillCount').textContent=billingData.length;
+  document.getElementById('billKpiCollected').textContent='RM '+fmt(Math.round(collected));
+  document.getElementById('billKpiCollRate').textContent=collRate.toFixed(1)+'%';
+  document.getElementById('billKpiPending').textContent='RM '+fmt(Math.round(pending));
+  document.getElementById('billKpiPendingCount').textContent=billingData.filter(b=>b.status==='pending').length;
+  document.getElementById('billKpiOverdue').textContent='RM '+fmt(Math.round(overdue));
+  document.getElementById('billKpiOverdueCount').textContent=billingData.filter(b=>b.status==='overdue').length;
+}
+
+function updateRateKPIs(){
+  if(rateData.length===0)return;
+  const cur=rateData[0],prev=rateData.length>1?rateData[1]:cur;
+  document.getElementById('rateKpiPeak').innerHTML=cur.peak.toFixed(2)+'<span class="kpi-unit">RM/kWh</span>';
+  document.getElementById('rateKpiFlat').innerHTML=cur.flat.toFixed(2)+'<span class="kpi-unit">RM/kWh</span>';
+  document.getElementById('rateKpiValley').innerHTML=cur.valley.toFixed(2)+'<span class="kpi-unit">RM/kWh</span>';
+  document.getElementById('rateKpiAfa').innerHTML=cur.afa.toFixed(3)+'<span class="kpi-unit">RM/kWh</span>';
+  updateTrend('rateKpiPeakTrend',prev.peak>0?(cur.peak-prev.peak)/prev.peak*100:false);
+  updateTrend('rateKpiFlatTrend',prev.flat>0?(cur.flat-prev.flat)/prev.flat*100:false);
+  updateTrend('rateKpiValleyTrend',prev.valley>0?(cur.valley-prev.valley)/prev.valley*100:false);
+  updateTrend('rateKpiAfaTrend',prev.afa>0?(cur.afa-prev.afa)/prev.afa*100:false);
+}
+
+const chartInstances={};
+function disposeAllCharts(){Object.keys(chartInstances).forEach(k=>{if(chartInstances[k]){chartInstances[k].dispose();delete chartInstances[k];}});}
+function makeChart(id,opt){const dom=document.getElementById(id);if(!dom)return null;if(chartInstances[id])chartInstances[id].dispose();const c=echarts.init(dom);c.setOption(opt);chartInstances[id]=c;return c;}
+
+function showToast(type,msg){const ct=document.getElementById('toastContainer');const icons={success:'\u2705',warning:'\u26A0\uFE0F',error:'\u274C',info:'\u2139\uFE0F'};const el=document.createElement('div');el.className='toast '+type;el.innerHTML='<span>'+(icons[type]||'')+'</span><span>'+msg+'</span>';ct.appendChild(el);setTimeout(()=>{el.style.opacity='0';setTimeout(()=>el.remove(),300);},2500);}
+
+function openModal(id){document.getElementById(id).classList.add('show');}
+function closeModal(id){document.getElementById(id).classList.remove('show');}
+function openThresholdModal(){openModal('thresholdModal');}
+function saveThreshold(){closeModal('thresholdModal');showToast('success',currentLang==='zh'?'阈值设置已保存':'Threshold saved');}
+function openAddRateModal(){openModal('addRateModal');}
+function addNewRate(){closeModal('addRateModal');showToast('success',currentLang==='zh'?'新费率已添加':'New rate added');}
+
+function openBillDetail(idx){
+  const d=billingData[idx];if(!d)return;
+  const c=document.getElementById('billDetailContent');
+  const months=getActiveMonths();
+  const tenantIdx=baseTenants.findIndex(b=>b.name===d.tenant);
+  let html='<div class="bill-pdf-preview">';
+  html+='<div class="bill-pdf-header"><h2>'+(currentLang==='zh'?'电费账单':'Electricity Bill')+'</h2><p>UNEED '+(currentLang==='zh'?'数字能源管理平台':'Digital Energy Management Platform')+'</p></div>';
+  if(months.length===1){
+    const m=months[0],mp=monthProfiles[m],r=getRateForMonth(m),i=tenantIdx>=0?tenantIdx:0;
+    const bt=baseTenants[i]||baseTenants[0];
+    const pk=mp.touPk[i],ft=mp.touFt[i],vl=mp.touVl[i],usage=pk+ft+vl;
+    const energyFee=Math.round(pk*r.peak+ft*r.flat+vl*r.valley);
+    const totalCap=baseTenants.reduce((s,b)=>s+b.contract,0);
+    let capShare=0;
+    if(bt.split==='demand')capShare=Math.round(energyFee*0.2*(mp.actuals[i]/mp.actuals.reduce((a,b)=>a+b,0)));
+    else if(bt.split==='area')capShare=Math.round(energyFee*0.2*(bt.contract/totalCap));
+    else capShare=Math.round(energyFee*0.2*0.2);
+    const afa=Math.round(usage*r.afa);
+    const total=energyFee+capShare+afa;
+    html+='<div class="bill-pdf-section"><h4>'+(currentLang==='zh'?'账单信息':'Bill Info')+'</h4>';
+    html+='<table class="bill-pdf-table"><tr><th>'+(currentLang==='zh'?'租户':'Tenant')+'</th><td>'+d.tenant+'</td><th>'+(currentLang==='zh'?'表计号':'Meter')+'</th><td class="num">'+d.meter+'</td></tr>';
+    html+='<tr><th>'+(currentLang==='zh'?'账单月份':'Month')+'</th><td>'+m+'</td><th>'+(currentLang==='zh'?'到期日':'Due Date')+'</th><td>'+m+'-05</td></tr></table></div>';
+    html+='<div class="bill-pdf-section"><h4>'+(currentLang==='zh'?'用电明细':'Usage Details')+'</h4>';
+    html+='<table class="bill-pdf-table"><tr><th>'+(currentLang==='zh'?'时段':'Period')+'</th><th>'+(currentLang==='zh'?'用电量':'Usage')+'</th><th>'+(currentLang==='zh'?'单价':'Rate')+'</th><th>'+(currentLang==='zh'?'费用':'Cost')+'</th></tr>';
+    html+='<tr><td>'+(currentLang==='zh'?'尖峰':'Peak')+'</td><td class="num">'+pk.toLocaleString()+' kWh</td><td class="num">RM '+r.peak.toFixed(2)+'</td><td class="num">RM '+fmt(Math.round(pk*r.peak))+'</td></tr>';
+    html+='<tr><td>'+(currentLang==='zh'?'平段':'Flat')+'</td><td class="num">'+ft.toLocaleString()+' kWh</td><td class="num">RM '+r.flat.toFixed(2)+'</td><td class="num">RM '+fmt(Math.round(ft*r.flat))+'</td></tr>';
+    html+='<tr><td>'+(currentLang==='zh'?'谷段':'Valley')+'</td><td class="num">'+vl.toLocaleString()+' kWh</td><td class="num">RM '+r.valley.toFixed(2)+'</td><td class="num">RM '+fmt(Math.round(vl*r.valley))+'</td></tr>';
+    html+='<tr style="font-weight:700;background:var(--bg);"><td>'+(currentLang==='zh'?'合计':'Total')+'</td><td class="num">'+usage.toLocaleString()+' kWh</td><td></td><td class="num">RM '+fmt(energyFee)+'</td></tr></table></div>';
+    html+='<div class="bill-pdf-section"><h4>'+(currentLang==='zh'?'其他费用':'Other Charges')+'</h4>';
+    html+='<table class="bill-pdf-table"><tr><th>'+(currentLang==='zh'?'费用项目':'Item')+'</th><th>'+(currentLang==='zh'?'金额':'Amount')+'</th></tr>';
+    html+='<tr><td>'+(currentLang==='zh'?'分时电费':'Energy Fee')+'</td><td class="num">RM '+fmt(energyFee)+'</td></tr>';
+    html+='<tr><td>'+(currentLang==='zh'?'容量分摊':'Capacity Share')+'</td><td class="num">RM '+fmt(capShare)+'</td></tr>';
+    html+='<tr><td>AFA'+(currentLang==='zh'?'附加费':' Fee')+'</td><td class="num">RM '+fmt(afa)+'</td></tr>';
+    html+='<tr style="font-weight:700;background:var(--bg);"><td>'+(currentLang==='zh'?'应收合计':'Total Due')+'</td><td class="num" style="color:var(--primary);font-size:15px;">RM '+fmt(total)+'</td></tr></table></div>';
+    html+='<div class="bill-pdf-total"><span class="total-label">'+(currentLang==='zh'?'缴费状态':'Status')+'</span><span class="badge '+statusClasses[d.status]+'">'+t(statusLabels[d.status])+'</span></div>';
+  } else {
+    html+='<div class="bill-pdf-section"><h4>'+(currentLang==='zh'?'账单信息':'Bill Info')+'</h4>';
+    html+='<table class="bill-pdf-table"><tr><th>'+(currentLang==='zh'?'租户':'Tenant')+'</th><td>'+d.tenant+'</td><th>'+(currentLang==='zh'?'表计号':'Meter')+'</th><td class="num">'+d.meter+'</td></tr>';
+    html+='<tr><th>'+(currentLang==='zh'?'账单月份':'Months')+'</th><td colspan="3">'+months.join(', ')+'</td></tr></table></div>';
+    html+='<div class="bill-pdf-section"><h4>'+(currentLang==='zh'?'各月明细':'Monthly Breakdown')+'</h4>';
+    html+='<table class="bill-pdf-table"><tr><th>'+(currentLang==='zh'?'月份':'Month')+'</th><th>'+(currentLang==='zh'?'用电量':'Usage')+'</th><th>'+(currentLang==='zh'?'电费':'Energy')+'</th><th>'+(currentLang==='zh'?'容量分摊':'Capacity')+'</th><th>AFA</th><th>'+(currentLang==='zh'?'合计':'Total')+'</th><th>'+(currentLang==='zh'?'状态':'Status')+'</th></tr>';
+    let grandUsage=0,grandEnergy=0,grandCap=0,grandAfa=0,grandTotal=0;
+    const i=tenantIdx>=0?tenantIdx:0;
+    months.forEach(m=>{
+      const mp=monthProfiles[m],r=getRateForMonth(m),bt=baseTenants[i]||baseTenants[0];
+      const pk=mp.touPk[i],ft=mp.touFt[i],vl=mp.touVl[i],usage=pk+ft+vl;
+      const energyFee=Math.round(pk*r.peak+ft*r.flat+vl*r.valley);
+      const totalCap=baseTenants.reduce((s,b)=>s+b.contract,0);
+      let capShare=0;
+      if(bt.split==='demand')capShare=Math.round(energyFee*0.2*(mp.actuals[i]/mp.actuals.reduce((a,b)=>a+b,0)));
+      else if(bt.split==='area')capShare=Math.round(energyFee*0.2*(bt.contract/totalCap));
+      else capShare=Math.round(energyFee*0.2*0.2);
+      const afa=Math.round(usage*r.afa);
+      const total=energyFee+capShare+afa;
+      grandUsage+=usage;grandEnergy+=energyFee;grandCap+=capShare;grandAfa+=afa;grandTotal+=total;
+      const st=mp.billStatus[i];
+      html+='<tr><td>'+m+'</td><td class="num">'+usage.toLocaleString()+'</td><td class="num">'+fmt(energyFee)+'</td><td class="num">'+fmt(capShare)+'</td><td class="num">'+fmt(afa)+'</td><td class="num" style="font-weight:700;">'+fmt(total)+'</td><td><span class="badge '+statusClasses[st]+'">'+t(statusLabels[st])+'</span></td></tr>';
+    });
+    html+='<tr style="font-weight:700;background:var(--bg);"><td>'+(currentLang==='zh'?'合计':'Total')+'</td><td class="num">'+grandUsage.toLocaleString()+'</td><td class="num">'+fmt(grandEnergy)+'</td><td class="num">'+fmt(grandCap)+'</td><td class="num">'+fmt(grandAfa)+'</td><td class="num" style="color:var(--primary);">'+fmt(grandTotal)+'</td><td></td></tr>';
+    html+='</table></div>';
+    html+='<div class="bill-pdf-total"><span class="total-label">'+(currentLang==='zh'?'应收总计':'Grand Total')+'</span><span class="total-value">RM '+fmt(grandTotal)+'</span></div>';
+  }
+  html+='</div>';
+  c.innerHTML=html;
+  openModal('billDetailModal');
+}
+
+function showBillEmailInput(){
+  const emailInput=document.getElementById('billEmailInput');
+  const preview=document.getElementById('billEmailPreview');
+  const content=document.getElementById('billDetailContent');
+  const tdEl=content.querySelector('.bill-pdf-table td');
+  const tenantName=tdEl?tdEl.textContent:'';
+  const bt=baseTenants.find(function(b){return b.name===tenantName;});
+  emailInput.value=bt?bt.email:'';
+  const months=getActiveMonths();
+  preview.innerHTML='<p>'+(currentLang==='zh'?'账单将包含':'Bill will include')+' '+months.length+(currentLang==='zh'?'个月的用电明细':' month(s) of usage details')+'</p>';
+  closeModal('billDetailModal');
+  openModal('billEmailModal');
+}
+
+function sendBillEmail(){
+  const email=document.getElementById('billEmailInput').value;
+  if(!email||!email.includes('@')){showToast('error',currentLang==='zh'?'请输入有效邮箱':'Enter valid email');return;}
+  closeModal('billEmailModal');
+  showToast('success',t('msg_email_sent')+' '+email);
+}
+
+function openBillHistory(idx){
+  const d=billingData[idx];if(!d)return;
+  const c=document.getElementById('billHistoryContent');
+  const tenantIdx=baseTenants.findIndex(b=>b.name===d.tenant);
+  const i=tenantIdx>=0?tenantIdx:0;
+  let html='<h4 style="margin-bottom:12px;color:var(--primary);">'+d.tenant+' - '+(currentLang==='zh'?'历史账单':'Billing History')+'</h4>';
+  html+='<table class="bill-history-table"><thead><tr><th>'+(currentLang==='zh'?'月份':'Month')+'</th><th>'+(currentLang==='zh'?'用电量':'Usage')+'</th><th>'+(currentLang==='zh'?'电费':'Energy')+'</th><th>'+(currentLang==='zh'?'容量分摊':'Capacity')+'</th><th>AFA</th><th>'+(currentLang==='zh'?'合计':'Total')+'</th><th>'+(currentLang==='zh'?'状态':'Status')+'</th><th>'+(currentLang==='zh'?'到期日':'Due')+'</th></tr></thead><tbody>';
+  allMonths.forEach(m=>{
+    const mp=monthProfiles[m],r=getRateForMonth(m),bt=baseTenants[i];
+    const pk=mp.touPk[i],ft=mp.touFt[i],vl=mp.touVl[i],usage=pk+ft+vl;
+    const energyFee=Math.round(pk*r.peak+ft*r.flat+vl*r.valley);
+    const totalCap=baseTenants.reduce((s,b)=>s+b.contract,0);
+    let capShare=0;
+    if(bt.split==='demand')capShare=Math.round(energyFee*0.2*(mp.actuals[i]/mp.actuals.reduce((a,b)=>a+b,0)));
+    else if(bt.split==='area')capShare=Math.round(energyFee*0.2*(bt.contract/totalCap));
+    else capShare=Math.round(energyFee*0.2*0.2);
+    const afa=Math.round(usage*r.afa);
+    const total=energyFee+capShare+afa;
+    const st=mp.billStatus[i];
+    html+='<tr><td>'+m+'</td><td class="num">'+usage.toLocaleString()+' kWh</td><td class="num">RM '+fmt(energyFee)+'</td><td class="num">RM '+fmt(capShare)+'</td><td class="num">RM '+fmt(afa)+'</td><td class="num" style="font-weight:700;">RM '+fmt(total)+'</td><td><span class="badge '+statusClasses[st]+'">'+t(statusLabels[st])+'</span></td><td>'+m+'-05</td></tr>';
+  });
+  html+='</tbody></table>';
+  c.innerHTML=html;
+  openModal('billHistoryModal');
+}
+
+function openRateDetail(idx){
+  const cur=rateData[idx],prev=rateData[idx+1]||cur;
+  const c=document.getElementById('rateDetailContent');
+  function rc(label,cv,pv,dec){const diff=pv!==0?(((cv-pv)/pv)*100).toFixed(1):'0.0';const cls=diff>0?'up':(diff<0?'down':'');const arrow=diff>0?'\u2191':(diff<0?'\u2193':'\u2014');return'<div class="rate-col"><div class="rc-label">'+label+'</div><div class="rc-value mono">'+cv.toFixed(dec)+'</div><div class="rate-change '+cls+'">'+arrow+' '+Math.abs(diff)+'%</div></div>';}
+  c.innerHTML='<div style="margin-bottom:16px;font-size:13px;color:var(--text-secondary);">'+(currentLang==='zh'?'对比':'Compare')+': '+cur.month+' vs '+prev.month+'</div><div class="rate-compare">'+rc(t('period_peak'),cur.peak,prev.peak,2)+'<div class="rate-arrow">\u2192</div><div class="rate-col"><div class="rc-label">'+(currentLang==='zh'?'上期':'Previous')+'</div><div class="rc-value mono">'+prev.peak.toFixed(2)+'</div></div></div><div class="rate-compare" style="margin-top:12px;">'+rc(t('period_flat'),cur.flat,prev.flat,2)+'<div class="rate-arrow">\u2192</div><div class="rate-col"><div class="rc-label">'+(currentLang==='zh'?'上期':'Previous')+'</div><div class="rc-value mono">'+prev.flat.toFixed(2)+'</div></div></div><div class="rate-compare" style="margin-top:12px;">'+rc(t('period_valley'),cur.valley,prev.valley,2)+'<div class="rate-arrow">\u2192</div><div class="rate-col"><div class="rc-label">'+(currentLang==='zh'?'上期':'Previous')+'</div><div class="rc-value mono">'+prev.valley.toFixed(2)+'</div></div></div>';
+  openModal('rateDetailModal');
+}
+
+const pageTitles={overview:'page_title_overview',capacity:'page_title_capacity',tou:'page_title_tou',billing:'page_title_billing',rates:'page_title_rates',settings:'page_title_settings'};
+function navigateTo(page){
+  currentPage=page;
+  document.querySelectorAll('.page-section').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-nav a').forEach(a=>a.classList.remove('active'));
+  const target=document.getElementById('page-'+page);
+  if(target)target.classList.add('active');
+  const navLink=document.querySelector('.sidebar-nav a[data-page="'+page+'"]');
+  if(navLink)navLink.classList.add('active');
+  document.getElementById('pageTitle').textContent=t(pageTitles[page]||'page_title_overview');
+  disposeAllCharts();
+  setTimeout(()=>renderPage(page),50);
+}
+document.querySelectorAll('.sidebar-nav a').forEach(a=>{
+  a.addEventListener('click',function(e){e.preventDefault();navigateTo(this.dataset.page);});
+});
+function renderPage(page){
+  switch(page){
+    case'overview':renderOverview();break;
+    case'capacity':renderCapacity();break;
+    case'tou':renderTou();break;
+    case'billing':renderBilling();break;
+    case'rates':renderRates();break;
+    case'settings':renderSettings();break;
+  }
+}
+
+// Multi-select dropdown logic
+function initMonthDropdown(){
+  const dd=document.getElementById('monthDropdown');
+  let html='<div class="ms-option special" onclick="toggleFullYear(this)"><input type="checkbox" '+(selectedMonths.includes('all')?'checked':'')+' onclick="event.stopPropagation();toggleFullYear(this.parentElement)"><span>'+(currentLang==='zh'?'全年':'Full Year')+'</span></div>';
+  html+='<div class="ms-divider"></div>';
+  allMonths.forEach(m=>{
+    const checked=selectedMonths.includes(m)?'checked':'';
+    const sel=selectedMonths.includes(m)?'selected':'';
+    html+='<div class="ms-option '+sel+'" onclick="toggleMonthOption(this,\''+m+'\')"><input type="checkbox" '+checked+' onclick="event.stopPropagation();toggleMonthOption(this.parentElement,\''+m+'\')"><span>'+m+'</span></div>';
+  });
+  dd.innerHTML=html;
+  updateMonthBtnText();
+}
+function initTenantDropdown(){
+  const dd=document.getElementById('tenantDropdown');
+  let html='<div class="ms-option special" onclick="toggleAllTenants(this)"><input type="checkbox" '+(selectedTenants.includes('all')?'checked':'')+' onclick="event.stopPropagation();toggleAllTenants(this.parentElement)"><span>'+(currentLang==='zh'?'全选':'Select All')+'</span></div>';
+  html+='<div class="ms-divider"></div>';
+  baseTenants.forEach(bt=>{
+    const checked=selectedTenants.includes(bt.name)?'checked':'';
+    const sel=selectedTenants.includes(bt.name)?'selected':'';
+    html+='<div class="ms-option '+sel+'" onclick="toggleTenantOption(this,\''+bt.name+'\')"><input type="checkbox" '+checked+' onclick="event.stopPropagation();toggleTenantOption(this.parentElement,\''+bt.name+'\')"><span>'+bt.name+'</span></div>';
+  });
+  dd.innerHTML=html;
+  updateTenantBtnText();
+}
+function toggleDropdown(id){
+  const dd=document.getElementById(id);
+  const wasOpen=dd.classList.contains('show');
+  document.querySelectorAll('.multi-select-dropdown').forEach(d=>d.classList.remove('show'));
+  document.querySelectorAll('.multi-select-btn').forEach(b=>b.classList.remove('open'));
+  if(!wasOpen){
+    dd.classList.add('show');
+    dd.parentElement.querySelector('.multi-select-btn').classList.add('open');
+  }
+}
+document.addEventListener('click',function(e){
+  if(!e.target.closest('.multi-select')){
+    document.querySelectorAll('.multi-select-dropdown').forEach(d=>d.classList.remove('show'));
+    document.querySelectorAll('.multi-select-btn').forEach(b=>b.classList.remove('open'));
+  }
+});
+function toggleFullYear(el){
+  if(selectedMonths.includes('all')){selectedMonths=['2026-11'];}
+  else{selectedMonths=['all'];}
+  initMonthDropdown();
+  refreshDashboard();
+}
+function toggleMonthOption(el,month){
+  if(selectedMonths.includes('all')){selectedMonths=selectedMonths.filter(m=>m!=='all');}
+  if(selectedMonths.includes(month)){selectedMonths=selectedMonths.filter(m=>m!==month);}
+  else{selectedMonths.push(month);}
+  if(selectedMonths.length===0)selectedMonths=['2026-11'];
+  if(selectedMonths.length===allMonths.length)selectedMonths=['all'];
+  initMonthDropdown();
+  refreshDashboard();
+}
+function toggleAllTenants(el){
+  if(selectedTenants.includes('all')){selectedTenants=[baseTenants[0].name];}
+  else{selectedTenants=['all'];}
+  initTenantDropdown();
+  refreshDashboard();
+}
+function toggleTenantOption(el,name){
+  if(selectedTenants.includes('all')){selectedTenants=selectedTenants.filter(t=>t!=='all');}
+  if(selectedTenants.includes(name)){selectedTenants=selectedTenants.filter(t=>t!==name);}
+  else{selectedTenants.push(name);}
+  if(selectedTenants.length===0)selectedTenants=[baseTenants[0].name];
+  if(selectedTenants.length===baseTenants.length)selectedTenants=['all'];
+  initTenantDropdown();
+  refreshDashboard();
+}
+function updateMonthBtnText(){
+  const btn=document.getElementById('monthBtnText');
+  if(selectedMonths.includes('all')){btn.textContent=currentLang==='zh'?'全年':'Full Year';}
+  else if(selectedMonths.length===1){btn.textContent=selectedMonths[0];}
+  else{btn.textContent=selectedMonths.length+(currentLang==='zh'?'个月':' months');}
+}
+function updateTenantBtnText(){
+  const btn=document.getElementById('tenantBtnText');
+  if(selectedTenants.includes('all')){btn.textContent=currentLang==='zh'?'全部租户':'All Tenants';}
+  else if(selectedTenants.length===1){btn.textContent=selectedTenants[0];}
+  else{btn.textContent=selectedTenants.length+(currentLang==='zh'?'个租户':' tenants');}
+}
+
+function refreshDashboard(){
+  regenerateData();
+  updateOverviewKPIs();
+  updateCapacityKPIs();
+  updateTouKPIs();
+  updateBillingKPIs();
+  updateRateKPIs();
+  disposeAllCharts();
+  setTimeout(()=>renderPage(currentPage),30);
+  const months=getActiveMonths();
+  const msg=currentLang==='zh'
+    ?'已切换至 '+months.join(', ')
+    :'Switched to '+months.join(', ');
+  showToast('success',msg);
+}
+
+function renderOverview(){
+  updateOverviewKPIs();
+  const atbody=document.querySelector('#ovAlertTable tbody');
+  atbody.innerHTML=tenants.map(d=>{
+    const s=getStatus(d.util);
+    return'<tr><td>'+d.name+'<br><span style="color:var(--text-muted);font-size:11px;">'+d.meter+'</span></td><td class="num mono">'+d.contract+' kW</td><td class="num mono">'+d.actual+' kW</td><td class="num mono" style="font-weight:600;">'+d.util.toFixed(1)+'%</td><td><span class="badge '+s.cls+'">'+t(s.key)+'</span></td><td><span style="font-size:12px;color:var(--text-secondary);">'+t(getSuggestion(d.util))+'</span></td></tr>';
+  }).join('');
+
+  const tbody=document.querySelector('#ovTouDetailTable tbody');
+  let tPk=0,tFt=0,tVl=0;
+  tbody.innerHTML=touDetailData.map(d=>{
+    const total=d.pk+d.ft+d.vl;
+    const cost=d.pk*pkRate+d.ft*ftRate+d.vl*vlRate;
+    tPk+=d.pk;tFt+=d.ft;tVl+=d.vl;
+    return'<tr><td>'+d.tenant+'</td><td class="num mono">'+d.pk.toLocaleString()+'</td><td class="num mono">'+d.ft.toLocaleString()+'</td><td class="num mono">'+d.vl.toLocaleString()+'</td><td class="num mono" style="font-weight:600;">'+total.toLocaleString()+'</td><td class="num mono" style="font-weight:600;">'+fmt(Math.round(cost))+'</td></tr>';
+  }).join('');
+  const totalAll=tPk*pkRate+tFt*ftRate+tVl*vlRate;
+  tbody.innerHTML+='<tr class="total-row"><td>'+t('total_row')+'</td><td class="num mono">'+tPk.toLocaleString()+'</td><td class="num mono">'+tFt.toLocaleString()+'</td><td class="num mono">'+tVl.toLocaleString()+'</td><td class="num mono">'+(tPk+tFt+tVl).toLocaleString()+'</td><td class="num mono">'+fmt(Math.round(totalAll))+'</td></tr>';
+
+  const bbody=document.querySelector('#ovBillingTable tbody');
+  bbody.innerHTML=billingData.map((d,i)=>'<tr><td style="font-weight:600;">'+d.tenant+'</td><td class="num mono" style="font-weight:700;">'+d.total.toLocaleString()+'</td><td><span class="badge '+statusClasses[d.status]+'">'+t(statusLabels[d.status])+'</span></td><td><button class="btn-link" onclick="openBillDetail('+i+')">'+t('action_detail')+'</button></td></tr>').join('');
+
+  const months=getActiveMonths();
+  const isSingle=months.length===1;
+  const tc=['#1E4E8C','#0E9F6E','#DC2626','#F59E0B','#8B5CF6'];
+
+  if(isSingle){
+    const m=months[0],mp=monthProfiles[m];
+    const at=getActiveTenantIndices();
+    makeChart('ovCapacityChart',{
+      tooltip:{trigger:'axis',backgroundColor:'#fff',borderColor:'#E5E7EB',textStyle:{color:'#111827',fontSize:12}},
+      grid:{top:20,right:20,bottom:30,left:50},
+      xAxis:{type:'category',data:at.map(i=>baseTenants[i].name),axisLine:{lineStyle:{color:'#E5E7EB'}},axisLabel:{color:'#6B7280',fontSize:10}},
+      yAxis:{type:'value',min:60,max:110,axisLabel:{formatter:'{value}%',color:'#6B7280'},splitLine:{lineStyle:{color:'#F3F4F6'}}},
+      series:[{type:'bar',data:at.map(i=>mp.utils[i]),itemStyle:{color:function(p){return tc[p.dataIndex%5];},borderRadius:[4,4,0,0]},barWidth:'50%',label:{show:true,position:'top',formatter:'{c}%',fontSize:11,fontWeight:600}}]
+    });
+  } else {
+    makeChart('ovCapacityChart',{
+      tooltip:{trigger:'axis',backgroundColor:'#fff',borderColor:'#E5E7EB',textStyle:{color:'#111827',fontSize:12}},
+      legend:{data:tenants.map(t=>t.name),bottom:0,textStyle:{fontSize:10}},
+      grid:{top:20,right:20,bottom:50,left:50},
+      xAxis:{type:'category',data:months.map(m=>m.substring(5)+'月'),axisLine:{lineStyle:{color:'#E5E7EB'}},axisLabel:{color:'#6B7280',fontSize:10}},
+      yAxis:{type:'value',min:60,max:110,axisLabel:{formatter:'{value}%',color:'#6B7280'},splitLine:{lineStyle:{color:'#F3F4F6'}}},
+      series:tenants.map((tn,si)=>({
+        name:tn.name,type:'line',
+        data:months.map(m=>monthProfiles[m].utils[tn._idx]),
+        smooth:true,lineStyle:{width:2,color:tc[si]},itemStyle:{color:tc[si]},symbol:'circle',symbolSize:5
+      }))
+    });
+  }
+
+  // TOU bar chart
+  const touMonths=months.length>6?months.slice(-6):months;
+  const touPk=[],touFt=[],touVl=[];
+  touMonths.forEach(m=>{
+    const mp=monthProfiles[m];const at=getActiveTenantIndices();
+    let pk=0,ft=0,vl=0;
+    at.forEach(i=>{pk+=mp.touPk[i];ft+=mp.touFt[i];vl+=mp.touVl[i];});
+    touPk.push(pk);touFt.push(ft);touVl.push(vl);
+  });
+  makeChart('ovTouBarChart',{
+    tooltip:{trigger:'axis',backgroundColor:'#fff',borderColor:'#E5E7EB',textStyle:{color:'#111827',fontSize:12}},
+    legend:{data:[t('chart_peak'),t('chart_flat'),t('chart_valley')],bottom:0,textStyle:{fontSize:11}},
+    grid:{top:20,right:20,bottom:40,left:75},
+    xAxis:{type:'category',data:touMonths.map(m=>m.substring(5)+(currentLang==='zh'?'月':'')),axisLine:{lineStyle:{color:'#E5E7EB'}},axisLabel:{color:'#6B7280'}},
+    yAxis:{type:'value',axisLabel:{formatter:'{value} kWh',color:'#6B7280',fontSize:10},splitLine:{lineStyle:{color:'#F3F4F6'}}},
+    series:[
+      {name:t('chart_peak'),type:'bar',stack:'total',data:touPk,itemStyle:{color:'#DC2626'},barWidth:'40%'},
+      {name:t('chart_flat'),type:'bar',stack:'total',data:touFt,itemStyle:{color:'#1E4E8C'}},
+      {name:t('chart_valley'),type:'bar',stack:'total',data:touVl,itemStyle:{color:'#0E9F6E'}}
+    ]
+  });
+
+  const curPkCost=Math.round(touDetailData.reduce((s,d)=>s+d.pk,0)*pkRate);
+  const curFtCost=Math.round(touDetailData.reduce((s,d)=>s+d.ft,0)*ftRate);
+  const curVlCost=Math.round(touDetailData.reduce((s,d)=>s+d.vl,0)*vlRate);
+  makeChart('ovTouPieChart',{
+    tooltip:{trigger:'item',backgroundColor:'#fff',borderColor:'#E5E7EB',textStyle:{color:'#111827',fontSize:12}},
+    legend:{bottom:0,textStyle:{fontSize:11}},
+    title:{text:t('cost_share'),left:'center',top:8,textStyle:{fontSize:13,fontWeight:600,color:'#374151'}},
+    series:[{type:'pie',radius:['42%','68%'],center:['50%','48%'],label:{formatter:'{b}\n{d}%',fontSize:11},data:[{value:curPkCost,name:t('chart_peak'),itemStyle:{color:'#DC2626'}},{value:curFtCost,name:t('chart_flat'),itemStyle:{color:'#1E4E8C'}},{value:curVlCost,name:t('chart_valley'),itemStyle:{color:'#0E9F6E'}}],emphasis:{itemStyle:{shadowBlur:10,shadowColor:'rgba(0,0,0,0.15)'}}}]
+  });
+}
+
+function renderCapacity(){
+  updateCapacityKPIs();
+  const tbody=document.querySelector('#capDetailTable tbody');
+  tbody.innerHTML=tenants.map(d=>{
+    const s=getStatus(d.util);const penalty=calcPenalty(d);
+    return'<tr><td style="font-weight:600;">'+d.name+'</td><td class="mono" style="color:var(--text-muted);">'+d.meter+'</td><td class="num mono">'+d.contract+'</td><td class="num mono">'+d.actual+'</td><td class="num mono" style="font-weight:600;">'+d.util.toFixed(1)+'%</td><td><span class="badge '+s.cls+'">'+t(s.key)+'</span></td><td class="num mono" style="color:'+(penalty>0?'var(--danger)':'var(--accent)')+';font-weight:600;">'+(penalty>0?'RM '+penalty.toLocaleString():'\u2014')+'</td><td><span style="font-size:12px;color:var(--text-secondary);">'+t(getSuggestion(d.util))+'</span></td></tr>';
+  }).join('');
+
+  const months=getActiveMonths();
+  const isSingle=months.length===1;
+  const tc=['#1E4E8C','#0E9F6E','#DC2626','#F59E0B','#8B5CF6'];
+
+  if(isSingle){
+    const m=months[0],mp=monthProfiles[m];
+    makeChart('capTrendChart',{
+      tooltip:{trigger:'axis',backgroundColor:'#fff',borderColor:'#E5E7EB',textStyle:{color:'#111827',fontSize:12}},
+      grid:{top:20,right:20,bottom:30,left:50},
+      xAxis:{type:'category',data:tenants.map(t=>t.name),axisLine:{lineStyle:{color:'#E5E7EB'}},axisLabel:{color:'#6B7280',fontSize:10}},
+      yAxis:{type:'value',min:60,max:110,axisLabel:{formatter:'{value}%',color:'#6B7280'},splitLine:{lineStyle:{color:'#F3F4F6'}}},
+      series:[{type:'bar',data:tenants.map(t=>mp.utils[t._idx]),itemStyle:{color:function(p){return tc[p.dataIndex%5];},borderRadius:[4,4,0,0]},barWidth:'50%',label:{show:true,position:'top',formatter:'{c}%',fontSize:11,fontWeight:600}}]
+    });
+  } else {
+    makeChart('capTrendChart',{
+      tooltip:{trigger:'axis',backgroundColor:'#fff',borderColor:'#E5E7EB',textStyle:{color:'#111827',fontSize:12}},
+      legend:{data:tenants.map(t=>t.name),bottom:0,textStyle:{fontSize:10}},
+      grid:{top:20,right:20,bottom:50,left:50},
+      xAxis:{type:'category',data:months.map(m=>m.substring(5)+(currentLang==='zh'?'月':'')),axisLine:{lineStyle:{color:'#E5E7EB'}},axisLabel:{color:'#6B7280',fontSize:10}},
+      yAxis:{type:'value',min:60,max:110,axisLabel:{formatter:'{value}%',color:'#6B7280'},splitLine:{lineStyle:{color:'#F3F4F6'}}},
+      series:tenants.map((tn,si)=>({
+        name:tn.name,type:'line',
+        data:months.map(m=>monthProfiles[m].utils[tn._idx]),
+        smooth:true,lineStyle:{width:2,color:tc[si]},itemStyle:{color:tc[si]},symbol:'circle',symbolSize:5
+      }))
+    });
+  }
+
+  makeChart('capCompareChart',{
+    tooltip:{trigger:'axis',backgroundColor:'#fff',borderColor:'#E5E7EB',textStyle:{color:'#111827',fontSize:12}},
+    legend:{data:[t('chart_contract'),t('chart_actual')],bottom:0,textStyle:{fontSize:11}},
+    grid:{top:20,right:20,bottom:40,left:65},
+    xAxis:{type:'category',data:tenants.map(d=>d.name),axisLabel:{fontSize:11,color:'#6B7280'}},
+    yAxis:{type:'value',axisLabel:{formatter:'{value} kW',color:'#6B7280',fontSize:10},splitLine:{lineStyle:{color:'#F3F4F6'}}},
+    series:[
+      {name:t('chart_contract'),type:'bar',data:tenants.map(d=>d.contract),itemStyle:{color:'#1E4E8C',borderRadius:[4,4,0,0]},barWidth:'30%'},
+      {name:t('chart_actual'),type:'bar',data:tenants.map(d=>d.actual),itemStyle:{color:'#0E9F6E',borderRadius:[4,4,0,0]},barWidth:'30%'}
+    ]
+  });
+
+  const normalCount=tenants.filter(d=>d.util<70).length;
+  const dangerCount=tenants.filter(d=>d.util>=70&&d.util<85).length;
+  const warnCount=tenants.filter(d=>d.util>=85&&d.util<100).length;
+  const overloadCount=tenants.filter(d=>d.util>=100).length;
+  makeChart('capUtilPieChart',{
+    tooltip:{trigger:'item',backgroundColor:'#fff',borderColor:'#E5E7EB',textStyle:{color:'#111827',fontSize:12}},
+    legend:{bottom:0,textStyle:{fontSize:11}},
+    series:[{type:'pie',radius:['35%','65%'],center:['50%','45%'],label:{formatter:'{b}\n{d}%',fontSize:10},data:[{value:normalCount,name:'<70% '+t('status_normal'),itemStyle:{color:'#0E9F6E'}},{value:dangerCount,name:'70-85% '+t('status_danger'),itemStyle:{color:'#EAB308'}},{value:warnCount,name:'85-100% '+t('status_warning'),itemStyle:{color:'#F59E0B'}},{value:overloadCount,name:'\u2265100% '+t('status_overload'),itemStyle:{color:'#DC2626'}}]}]
+  });
+}
+
+function renderTou(){
+  updateTouKPIs();
+  const tbody=document.querySelector('#touFullTable tbody');
+  let tPk=0,tFt=0,tVl=0;
+  tbody.innerHTML=touDetailData.map(d=>{
+    const total=d.pk+d.ft+d.vl;
+    const pkC=d.pk*pkRate,ftC=d.ft*ftRate,vlC=d.vl*vlRate;
+    const totalC=pkC+ftC+vlC;
+    const avg=totalC/total;
+    tPk+=d.pk;tFt+=d.ft;tVl+=d.vl;
+    return'<tr><td style="font-weight:600;">'+d.tenant+'</td><td class="num mono">'+d.pk.toLocaleString()+'</td><td class="num mono">'+d.ft.toLocaleString()+'</td><td class="num mono">'+d.vl.toLocaleString()+'</td><td class="num mono" style="font-weight:600;">'+total.toLocaleString()+'</td><td class="num mono">'+pkC.toFixed(0)+'</td><td class="num mono">'+ftC.toFixed(0)+'</td><td class="num mono">'+vlC.toFixed(0)+'</td><td class="num mono" style="font-weight:700;">'+totalC.toFixed(0)+'</td><td class="num mono">'+avg.toFixed(3)+'</td></tr>';
+  }).join('');
+  const tTotal=tPk+tFt+tVl;
+  const tCost=tPk*pkRate+tFt*ftRate+tVl*vlRate;
+  tbody.innerHTML+='<tr class="total-row"><td>'+t('total_row')+'</td><td class="num mono">'+tPk.toLocaleString()+'</td><td class="num mono">'+tFt.toLocaleString()+'</td><td class="num mono">'+tVl.toLocaleString()+'</td><td class="num mono">'+tTotal.toLocaleString()+'</td><td class="num mono">'+fmt(Math.round(tPk*pkRate))+'</td><td class="num mono">'+fmt(Math.round(tFt*ftRate))+'</td><td class="num mono">'+fmt(Math.round(tVl*vlRate))+'</td><td class="num mono">'+fmt(Math.round(tCost))+'</td><td class="num mono">'+(tCost/tTotal).toFixed(3)+'</td></tr>';
+
+  const months=getActiveMonths();
+  const trendMonths=months.length>6?months.slice(-6):months;
+  const trendPk=[],trendFt=[],trendVl=[];
+  trendMonths.forEach(m=>{
+    const mp=monthProfiles[m];const at=getActiveTenantIndices();
+    let pk=0,ft=0,vl=0;
+    at.forEach(i=>{pk+=mp.touPk[i];ft+=mp.touFt[i];vl+=mp.touVl[i];});
+    trendPk.push(pk);trendFt.push(ft);trendVl.push(vl);
+  });
+
+  makeChart('touTrendChart',{
+    tooltip:{trigger:'axis',backgroundColor:'#fff',borderColor:'#E5E7EB',textStyle:{color:'#111827',fontSize:12}},
+    legend:{data:[t('chart_peak'),t('chart_flat'),t('chart_valley')],bottom:0,textStyle:{fontSize:11}},
+    grid:{top:20,right:20,bottom:40,left:75},
+    xAxis:{type:'category',data:trendMonths.map(m=>m.substring(5)+(currentLang==='zh'?'月':'')),axisLine:{lineStyle:{color:'#E5E7EB'}},axisLabel:{color:'#6B7280'}},
+    yAxis:{type:'value',axisLabel:{formatter:'{value} kWh',color:'#6B7280',fontSize:10},splitLine:{lineStyle:{color:'#F3F4F6'}}},
+    series:[
+      {name:t('chart_peak'),type:'line',data:trendPk,smooth:true,areaStyle:{opacity:0.15},lineStyle:{width:2,color:'#DC2626'},itemStyle:{color:'#DC2626'},symbol:'circle',symbolSize:6},
+      {name:t('chart_flat'),type:'line',data:trendFt,smooth:true,areaStyle:{opacity:0.15},lineStyle:{width:2,color:'#1E4E8C'},itemStyle:{color:'#1E4E8C'},symbol:'circle',symbolSize:6},
+      {name:t('chart_valley'),type:'line',data:trendVl,smooth:true,areaStyle:{opacity:0.15},lineStyle:{width:2,color:'#0E9F6E'},itemStyle:{color:'#0E9F6E'},symbol:'circle',symbolSize:6}
+    ]
+  });
+
+  const curPkCost=Math.round(touDetailData.reduce((s,d)=>s+d.pk,0)*pkRate);
+  const curFtCost=Math.round(touDetailData.reduce((s,d)=>s+d.ft,0)*ftRate);
+  const curVlCost=Math.round(touDetailData.reduce((s,d)=>s+d.vl,0)*vlRate);
+  makeChart('touCostPieChart',{
+    tooltip:{trigger:'item',backgroundColor:'#fff',borderColor:'#E5E7EB',textStyle:{color:'#111827',fontSize:12}},
+    legend:{bottom:0,textStyle:{fontSize:11}},
+    title:{text:t('cost_share'),left:'center',top:8,textStyle:{fontSize:13,fontWeight:600,color:'#374151'}},
+    series:[{type:'pie',radius:['42%','68%'],center:['50%','52%'],label:{formatter:'{b}\nRM {c}',fontSize:11},data:[{value:curPkCost,name:t('chart_peak'),itemStyle:{color:'#DC2626'}},{value:curFtCost,name:t('chart_flat'),itemStyle:{color:'#1E4E8C'}},{value:curVlCost,name:t('chart_valley'),itemStyle:{color:'#0E9F6E'}}],emphasis:{itemStyle:{shadowBlur:10,shadowColor:'rgba(0,0,0,0.15)'}}}]
+  });
+
+  const colors=['#1E4E8C','#0E9F6E','#DC2626','#F59E0B','#8B5CF6'];
+  makeChart('touTenantPieChart',{
+    tooltip:{trigger:'item',backgroundColor:'#fff',borderColor:'#E5E7EB',textStyle:{color:'#111827',fontSize:12}},
+    legend:{bottom:0,textStyle:{fontSize:11}},
+    series:[{type:'pie',radius:['35%','65%'],center:['50%','45%'],roseType:'area',label:{formatter:'{b}\n{d}%',fontSize:10},data:touDetailData.map((d,i)=>({value:d.pk+d.ft+d.vl,name:d.tenant,itemStyle:{color:colors[i%5]}})),emphasis:{itemStyle:{shadowBlur:10,shadowColor:'rgba(0,0,0,0.15)'}}}]
+  });
+}
+
+function renderBilling(){
+  updateBillingKPIs();
+  renderBillingPage();
+  const months=getActiveMonths();
+  const trendMonths=months.length>6?months.slice(-6):months;
+  const trendBilled=[],trendCollected=[];
+  trendMonths.forEach(m=>{
+    const mp=monthProfiles[m];const r=getRateForMonth(m);const at=getActiveTenantIndices();
+    let totalBilled=0;
+    at.forEach(i=>{
+      const e=mp.touPk[i]*r.peak+mp.touFt[i]*r.flat+mp.touVl[i]*r.valley;
+      totalBilled+=Math.round(e*1.25);
+    });
+    trendBilled.push(totalBilled);
+    trendCollected.push(Math.round(totalBilled*(0.7+Math.sin(allMonths.indexOf(m))*0.15+0.1)));
+  });
+
+  makeChart('billTrendChart',{
+    tooltip:{trigger:'axis',backgroundColor:'#fff',borderColor:'#E5E7EB',textStyle:{color:'#111827',fontSize:12}},
+    legend:{data:[t('chart_billed'),t('chart_collected')],bottom:0,textStyle:{fontSize:11}},
+    grid:{top:20,right:50,bottom:40,left:70},
+    xAxis:{type:'category',data:trendMonths.map(m=>m.substring(5)+(currentLang==='zh'?'月':'')),axisLine:{lineStyle:{color:'#E5E7EB'}},axisLabel:{color:'#6B7280'}},
+    yAxis:[{type:'value',axisLabel:{formatter:'RM {value}',color:'#6B7280',fontSize:10},splitLine:{lineStyle:{color:'#F3F4F6'}}}],
+    series:[
+      {name:t('chart_billed'),type:'bar',data:trendBilled,itemStyle:{color:'#1E4E8C',borderRadius:[4,4,0,0]},barWidth:'35%'},
+      {name:t('chart_collected'),type:'line',data:trendCollected,smooth:true,lineStyle:{width:3,color:'#0E9F6E'},itemStyle:{color:'#0E9F6E'},symbol:'circle',symbolSize:8,areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(14,159,110,0.15)'},{offset:1,color:'rgba(14,159,110,0.02)'}])}}
+    ]
+  });
+
+  const paidTotal=billingData.filter(b=>b.status==='paid').reduce((s,b)=>s+b.total,0);
+  const pendingTotal=billingData.filter(b=>b.status==='pending').reduce((s,b)=>s+b.total,0);
+  const overdueTotal=billingData.filter(b=>b.status==='overdue').reduce((s,b)=>s+b.total,0);
+  makeChart('billStatusPieChart',{
+    tooltip:{trigger:'item',backgroundColor:'#fff',borderColor:'#E5E7EB',textStyle:{color:'#111827',fontSize:12}},
+    legend:{bottom:0,textStyle:{fontSize:11}},
+    series:[{type:'pie',radius:['40%','65%'],center:['50%','45%'],label:{formatter:'{b}\nRM {c}',fontSize:11},data:[{value:Math.round(paidTotal),name:t('pay_paid'),itemStyle:{color:'#0E9F6E'}},{value:Math.round(pendingTotal),name:t('pay_pending'),itemStyle:{color:'#F59E0B'}},{value:Math.round(overdueTotal),name:t('pay_overdue'),itemStyle:{color:'#DC2626'}}],emphasis:{itemStyle:{shadowBlur:10,shadowColor:'rgba(0,0,0,0.15)'}}}]
+  });
+}
+
+function renderBillingPage(){
+  const sf=document.getElementById('billStatusFilter');
+  const bf=document.getElementById('billSplitFilter');
+  const sv=sf?sf.value:'all';
+  const bv=bf?bf.value:'all';
+  let filtered=billingData.filter(d=>{
+    if(sv!=='all'&&d.status!==sv)return false;
+    if(bv!=='all'&&d.split!==bv)return false;
+    return true;
+  });
+  const tbody=document.querySelector('#billingPageTable tbody');
+  if(!tbody)return;
+  let totals={usage:0,energy:0,cap:0,afa:0,total:0};
+  tbody.innerHTML=filtered.map(d=>{
+    totals.usage+=d.usage;totals.energy+=d.energyFee;totals.cap+=d.capShare;totals.afa+=d.afa;totals.total+=d.total;
+    const oi=billingData.indexOf(d);
+    return'<tr><td style="font-weight:600;">'+d.tenant+'</td><td class="mono" style="color:var(--text-muted);">'+d.meter+'</td><td class="num mono">'+d.usage.toLocaleString()+'</td><td class="num mono">'+d.energyFee.toLocaleString()+'</td><td class="num mono">'+d.capShare.toLocaleString()+'</td><td><span class="split-tag '+splitClasses[d.split]+'">'+t(splitLabels[d.split])+'</span></td><td class="num mono">'+d.afa.toLocaleString()+'</td><td class="num mono" style="font-weight:700;">'+d.total.toLocaleString()+'</td><td><span class="badge '+statusClasses[d.status]+'">'+t(statusLabels[d.status])+'</span></td><td class="action-btns"><button class="btn-link" onclick="openBillDetail('+oi+')">'+t('action_detail')+'</button><button class="btn-link" onclick="openBillHistory('+oi+')">'+t('action_history')+'</button></td></tr>';
+  }).join('');
+  if(filtered.length>0){
+    tbody.innerHTML+='<tr class="total-row"><td colspan="2">'+t('total_row')+'</td><td class="num mono">'+totals.usage.toLocaleString()+'</td><td class="num mono">'+totals.energy.toLocaleString()+'</td><td class="num mono">'+totals.cap.toLocaleString()+'</td><td></td><td class="num mono">'+totals.afa.toLocaleString()+'</td><td class="num mono">'+totals.total.toLocaleString()+'</td><td colspan="2"></td></tr>';
+  }
+  updateBillingKPIs();
+}
+
+function renderRates(){
+  updateRateKPIs();
+  const tbody=document.querySelector('#ratePageTable tbody');
+  tbody.innerHTML=rateData.map((d,i)=>{
+    const isCur=i===0;
+    return'<tr><td style="font-weight:600;">'+d.month+'</td><td class="num mono">'+d.peak.toFixed(2)+'</td><td class="num mono">'+d.flat.toFixed(2)+'</td><td class="num mono">'+d.valley.toFixed(2)+'</td><td class="num mono">'+d.afa.toFixed(3)+'</td><td><span class="badge '+(isCur?'badge-green':'badge-gray')+'">'+t(isCur?'status_active':'status_expired')+'</span></td><td class="action-btns"><button class="btn-link" onclick="openRateDetail('+i+')">'+t('action_view')+'</button>'+(i<rateData.length-1?'<button class="btn-link" onclick="openRateDetail('+i+')">'+t('action_trace')+'</button>':'')+'</td></tr>';
+  }).join('');
+
+  const tl=document.getElementById('rateTimeline');
+  const visibleAudits=rateAuditLog.slice(0,5);
+  tl.innerHTML=visibleAudits.map(item=>'<div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-time">'+item.time+'</div><div class="timeline-content">'+t(item.key)+'</div></div>').join('');
+
+  const months=rateData.map(d=>d.month).reverse();
+  makeChart('rateTrendChart',{
+    tooltip:{trigger:'axis',backgroundColor:'#fff',borderColor:'#E5E7EB',textStyle:{color:'#111827',fontSize:12}},
+    legend:{data:[t('period_peak'),t('period_flat'),t('period_valley'),'AFA'],bottom:0,textStyle:{fontSize:11}},
+    grid:{top:20,right:50,bottom:40,left:65},
+    xAxis:{type:'category',data:months,axisLine:{lineStyle:{color:'#E5E7EB'}},axisLabel:{color:'#6B7280',fontSize:10}},
+    yAxis:{type:'value',axisLabel:{formatter:'RM {value}',color:'#6B7280',fontSize:10},splitLine:{lineStyle:{color:'#F3F4F6'}}},
+    series:[
+      {name:t('period_peak'),type:'line',data:rateData.map(d=>d.peak).reverse(),smooth:true,lineStyle:{width:3,color:'#DC2626'},itemStyle:{color:'#DC2626'},symbol:'circle',symbolSize:8},
+      {name:t('period_flat'),type:'line',data:rateData.map(d=>d.flat).reverse(),smooth:true,lineStyle:{width:3,color:'#1E4E8C'},itemStyle:{color:'#1E4E8C'},symbol:'circle',symbolSize:8},
+      {name:t('period_valley'),type:'line',data:rateData.map(d=>d.valley).reverse(),smooth:true,lineStyle:{width:3,color:'#0E9F6E'},itemStyle:{color:'#0E9F6E'},symbol:'circle',symbolSize:8},
+      {name:'AFA',type:'line',data:rateData.map(d=>d.afa).reverse(),smooth:true,lineStyle:{width:2,color:'#F59E0B',type:'dashed'},itemStyle:{color:'#F59E0B'},symbol:'diamond',symbolSize:8}
+    ]
+  });
+}
+
+function renderSettings(){
+  const displayTenants=baseTenants;
+  const tbody=document.querySelector('#tenantMgmtTable tbody');
+  if(!tbody)return;
+  tbody.innerHTML=displayTenants.map((d,i)=>'<tr><td style="font-weight:600;">'+d.name+'</td><td class="mono" style="color:var(--text-muted);">'+d.meter+'</td><td>'+d.contact+'</td><td class="mono">'+d.phone+'</td><td class="mono" style="font-size:12px;">'+d.email+'</td><td class="num mono">'+d.contract+'</td><td><span class="split-tag '+splitClasses[d.split]+'">'+t(splitLabels[d.split])+'</span></td><td class="action-btns"><button class="btn-link" onclick="openTenantModal('+i+')">'+t('action_edit')+'</button><button class="btn-link" style="color:var(--danger);" onclick="deleteTenant('+i+')">'+t('action_delete')+'</button></td></tr>').join('');
+}
+
+const touConfigData = {
+  peak: { name: '尖峰', nameEn: 'Peak', timeSegments: [{start:'09:00',end:'12:00'},{start:'18:00',end:'21:00'}], rate: 0.52 },
+  flat: { name: '平段', nameEn: 'Flat', timeSegments: [{start:'07:00',end:'09:00'},{start:'12:00',end:'18:00'},{start:'21:00',end:'23:00'}], rate: 0.35 },
+  valley: { name: '谷段', nameEn: 'Valley', timeSegments: [{start:'23:00',end:'07:00'}], rate: 0.22 }
+};
+let editingTouPeriod = null;
+
+function formatTouTimeDisplay(period) {
+  const cfg = touConfigData[period];
+  return cfg.timeSegments.map(seg => seg.start + '-' + seg.end).join(' / ');
+}
+
+function updateTouConfigDisplay() {
+  ['peak','flat','valley'].forEach(function(p) {
+    var timeEl = document.getElementById('tou' + p.charAt(0).toUpperCase() + p.slice(1) + 'TimeDisplay');
+    var rateEl = document.getElementById('tou' + p.charAt(0).toUpperCase() + p.slice(1) + 'RateDisplay');
+    if (timeEl) timeEl.textContent = formatTouTimeDisplay(p);
+    if (rateEl) rateEl.textContent = touConfigData[p].rate.toFixed(2);
+  });
+}
+
+function openTouEditModal(period) {
+  editingTouPeriod = period;
+  var cfg = touConfigData[period];
+  var titleEl = document.getElementById('touEditTitle');
+  var nameStr = currentLang === 'zh' ? cfg.name : cfg.nameEn;
+  titleEl.textContent = (currentLang === 'zh' ? '⚙️ 编辑时段 - ' : '⚙️ Edit Period - ') + nameStr;
+  document.getElementById('touEditName').value = nameStr;
+  document.getElementById('touEditRate').value = cfg.rate;
+  renderTouTimeSegments(cfg.timeSegments);
+  openModal('touEditModal');
+}
+
+function renderTouTimeSegments(segments) {
+  var container = document.getElementById('touTimeSegments');
+  var html = '';
+  segments.forEach(function(seg, idx) {
+    html += '<div class="tou-segment-row" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">';
+    html += '<span style="font-size:12px;color:var(--text-muted);min-width:20px;">#' + (idx + 1) + '</span>';
+    html += '<label style="font-size:12px;">' + (currentLang === 'zh' ? '起始:' : 'From:') + '</label>';
+    html += '<input class="form-input mono" type="time" value="' + seg.start + '" data-seg-idx="' + idx + '" data-seg-field="start" style="width:110px;font-size:13px;">';
+    html += '<label style="font-size:12px;">' + (currentLang === 'zh' ? '终止:' : 'To:') + '</label>';
+    html += '<input class="form-input mono" type="time" value="' + seg.end + '" data-seg-idx="' + idx + '" data-seg-field="end" style="width:110px;font-size:13px;">';
+    if (segments.length > 1) {
+      html += '<button class="btn-link" style="color:var(--danger);font-size:16px;padding:2px 6px;" onclick="removeTouTimeSegment(' + idx + ')" title="' + (currentLang === 'zh' ? '删除' : 'Remove') + '">&times;</button>';
+    }
+    html += '</div>';
+  });
+  container.innerHTML = html;
+}
+
+function addTouTimeSegment() {
+  var cfg = touConfigData[editingTouPeriod];
+  var lastSeg = cfg.timeSegments[cfg.timeSegments.length - 1];
+  cfg.timeSegments.push({start: '00:00', end: '06:00'});
+  renderTouTimeSegments(cfg.timeSegments);
+}
+
+function removeTouTimeSegment(idx) {
+  var cfg = touConfigData[editingTouPeriod];
+  if (cfg.timeSegments.length <= 1) return;
+  cfg.timeSegments.splice(idx, 1);
+  renderTouTimeSegments(cfg.timeSegments);
+}
+
+function saveTouEdit() {
+  var cfg = touConfigData[editingTouPeriod];
+  var rate = parseFloat(document.getElementById('touEditRate').value);
+  if (isNaN(rate) || rate <= 0) {
+    showToast('error', currentLang === 'zh' ? '请输入有效电价' : 'Enter valid rate');
+    return;
+  }
+  var segInputs = document.querySelectorAll('#touTimeSegments input[type="time"]');
+  var newSegments = [];
+  for (var i = 0; i < segInputs.length; i += 2) {
+    var startVal = segInputs[i].value;
+    var endVal = segInputs[i + 1] ? segInputs[i + 1].value : '';
+    if (startVal && endVal) {
+      newSegments.push({start: startVal, end: endVal});
+    }
+  }
+  if (newSegments.length === 0) {
+    showToast('error', currentLang === 'zh' ? '至少需要一个时间段' : 'At least one time segment required');
+    return;
+  }
+  cfg.timeSegments = newSegments;
+  cfg.rate = rate;
+  updateTouConfigDisplay();
+  closeModal('touEditModal');
+  showToast('success', currentLang === 'zh' ? '时段配置已保存' : 'Period config saved');
+}
+
+function saveTouConfig(){
+  var pk=touConfigData.peak.rate;
+  var ft=touConfigData.flat.rate;
+  var vl=touConfigData.valley.rate;
+  allRateData[0].peak=pk;allRateData[0].flat=ft;allRateData[0].valley=vl;
+  pkRate=pk;ftRate=ft;vlRate=vl;
+  regenerateData();
+  updateOverviewKPIs();updateCapacityKPIs();updateTouKPIs();updateBillingKPIs();updateRateKPIs();
+  disposeAllCharts();setTimeout(function(){renderPage(currentPage);},50);
+  showToast('success',t('msg_tou_saved'));
+}
+
+let editingTenantIdx=-1;
+function openTenantModal(idx){
+  editingTenantIdx=idx;
+  const title=document.getElementById('tenantModalTitle');
+  if(idx>=0){
+    const d=baseTenants[idx];
+    title.textContent=(currentLang==='zh'?'✏️ 编辑租户 ':'✏️ Edit Tenant ')+d.name;
+    document.getElementById('tmName').value=d.name;
+    document.getElementById('tmMeter').value=d.meter;
+    document.getElementById('tmContact').value=d.contact;
+    document.getElementById('tmPhone').value=d.phone;
+    document.getElementById('tmEmail').value=d.email;
+    document.getElementById('tmContract').value=d.contract;
+    document.getElementById('tmSplit').value=d.split;
+  } else {
+    title.textContent=currentLang==='zh'?'➕ 新增租户':'➕ Add Tenant';
+    document.getElementById('tmName').value='';
+    document.getElementById('tmMeter').value='M-'+(1000+baseTenants.length+1);
+    document.getElementById('tmContact').value='';
+    document.getElementById('tmPhone').value='+60 ';
+    document.getElementById('tmEmail').value='';
+    document.getElementById('tmContract').value='200';
+    document.getElementById('tmSplit').value='demand';
+  }
+  openModal('tenantModal');
+}
+
+function saveTenant(){
+  const name=document.getElementById('tmName').value.trim();
+  const meter=document.getElementById('tmMeter').value.trim();
+  const contact=document.getElementById('tmContact').value.trim();
+  const phone=document.getElementById('tmPhone').value.trim();
+  const email=document.getElementById('tmEmail').value.trim();
+  const contract=parseInt(document.getElementById('tmContract').value)||200;
+  const split=document.getElementById('tmSplit').value;
+  if(!name){showToast('error',currentLang==='zh'?'请输入租户名称':'Enter tenant name');return;}
+  if(editingTenantIdx>=0){
+    baseTenants[editingTenantIdx]={...baseTenants[editingTenantIdx],name,meter,contact,phone,email,contract,split};
+    showToast('success',t('msg_tenant_edited'));
+  } else {
+    baseTenants.push({name,meter,contract,split,contact,phone,email});
+    showToast('success',t('msg_tenant_added'));
+  }
+  closeModal('tenantModal');
+  regenerateData();
+  renderSettings();
+  updateOverviewKPIs();updateCapacityKPIs();updateBillingKPIs();
+  disposeAllCharts();setTimeout(()=>renderPage(currentPage),50);
+}
+
+function deleteTenant(idx){
+  if(!confirm(currentLang==='zh'?'确认删除租户 '+baseTenants[idx].name+' ?':'Delete tenant '+baseTenants[idx].name+' ?'))return;
+  baseTenants.splice(idx,1);
+  regenerateData();
+  renderSettings();
+  updateOverviewKPIs();updateCapacityKPIs();updateBillingKPIs();
+  disposeAllCharts();setTimeout(()=>renderPage(currentPage),50);
+  showToast('success',currentLang==='zh'?'租户已删除':'Tenant deleted');
+}
+
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click',function(){
+    const tabId=this.dataset.tab;
+    this.closest('.card-body').querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    this.closest('.card-body').querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    this.classList.add('active');
+    document.getElementById(tabId).classList.add('active');
+  });
+});
+
+function applyLang(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key=el.dataset.i18n;
+    if(i18n[currentLang][key])el.textContent=i18n[currentLang][key];
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{
+    const key=el.dataset.i18nPlaceholder;
+    if(i18n[currentLang][key])el.placeholder=i18n[currentLang][key];
+  });
+  document.getElementById('langToggle').textContent=currentLang==='zh'?'EN':'\u4E2D';
+  const ap=document.querySelector('.page-section.active');
+  if(ap){
+    const page=ap.id.replace('page-','');
+    document.getElementById('pageTitle').textContent=t(pageTitles[page]||'page_title_overview');
+  }
+  updateMonthBtnText();
+  updateTenantBtnText();
+}
+
+document.getElementById('langToggle').addEventListener('click',()=>{
+  currentLang=currentLang==='zh'?'en':'zh';
+  initMonthDropdown();
+  initTenantDropdown();
+  applyLang();
+  regenerateData();
+  updateOverviewKPIs();
+  updateCapacityKPIs();
+  updateTouKPIs();
+  updateBillingKPIs();
+  updateRateKPIs();
+  disposeAllCharts();
+  setTimeout(()=>renderPage(currentPage),50);
+});
+
+window.addEventListener('resize',()=>{
+  Object.values(chartInstances).forEach(c=>{if(c)c.resize();});
+});
+
+// Initialize
+initMonthDropdown();
+initTenantDropdown();
+regenerateData();
+applyLang();
+updateOverviewKPIs();
+updateCapacityKPIs();
+updateTouKPIs();
+updateBillingKPIs();
+updateRateKPIs();
+renderOverview();
+</script></script>
+</body>
+</html>
