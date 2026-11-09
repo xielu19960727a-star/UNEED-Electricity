@@ -199,6 +199,12 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC"
 .bill-pdf-total { background: var(--bg); padding: 12px; border-radius: 6px; margin-top: 12px; display: flex; justify-content: space-between; align-items: center; }
 .bill-pdf-total .total-label { font-weight: 600; color: var(--text-secondary); }
 .bill-pdf-total .total-value { font-size: 18px; font-weight: 800; color: var(--primary); font-family: "JetBrains Mono", monospace; }
+.month-chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.month-chip { padding: 5px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; background: #fff; color: var(--text-secondary); transition: all 0.15s; user-select: none; }
+.month-chip:hover { border-color: var(--primary); color: var(--primary); }
+.month-chip.selected { background: var(--primary); color: #fff; border-color: var(--primary); }
+.gen-bill-summary { display: flex; align-items: center; gap: 12px; margin-top: 10px; padding: 8px 12px; background: var(--bg); border-radius: 8px; font-size: 12px; color: var(--text-secondary); }
+.gen-bill-summary strong { color: var(--primary); font-size: 14px; }
 .bill-history-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .bill-history-table th, .bill-history-table td { border: 1px solid var(--border); padding: 8px 12px; text-align: left; }
 .bill-history-table th { background: var(--bg); font-weight: 600; color: var(--text-secondary); }
@@ -299,7 +305,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC"
         <div class="kpi-card amber"><div class="kpi-label" data-i18n="bill_kpi_pending">待收款</div><div class="kpi-value mono" id="billKpiPending" style="font-size:22px;">RM 7,237</div><div class="kpi-trend neutral" id="billKpiPendingTrend"><span id="billKpiPendingCount">2</span><span data-i18n="bill_kpi_pending_bills">笔待缴</span></div></div>
         <div class="kpi-card red"><div class="kpi-label" data-i18n="bill_kpi_overdue">逾期未缴</div><div class="kpi-value mono" id="billKpiOverdue" style="font-size:22px;">RM 3,763</div><div class="kpi-trend up" id="billKpiOverdueTrend"><span id="billKpiOverdueCount">1</span><span data-i18n="bill_kpi_overdue_bills">笔欠费</span></div></div>
       </div>
-      <div class="card"><div class="card-header"><h3 data-i18n="bill_mgmt_title">&#128101; 租户收费管理</h3><div style="display:flex;gap:8px;"><button class="btn btn-primary btn-sm" onclick="showToast('success','月度账单已生成')" data-i18n="gen_bill">&#128203; 生成月度账单</button><button class="btn btn-outline btn-sm" onclick="showToast('success','账单已导出')" data-i18n="export_excel">&#128229; 导出 Excel</button></div></div><div class="card-body"><div class="filter-row"><label data-i18n="filter_status">筛选状态:</label><select class="topbar-select" id="billStatusFilter" onchange="renderBillingPage()"><option value="all" data-i18n="filter_all">全部</option><option value="paid" data-i18n="pay_paid">已缴</option><option value="pending" data-i18n="pay_pending">待缴</option><option value="overdue" data-i18n="pay_overdue">欠费</option></select><label data-i18n="filter_split">分摊方式:</label><select class="topbar-select" id="billSplitFilter" onchange="renderBillingPage()"><option value="all" data-i18n="filter_all">全部</option><option value="demand" data-i18n="split_by_demand">按需求量分摊</option><option value="area" data-i18n="split_by_area">按面积分摊</option><option value="ratio" data-i18n="split_by_ratio">按比例分配</option></select></div><div style="overflow-x:auto;"><table class="data-table" id="billingPageTable"><thead><tr><th data-i18n="th_tenant">租户</th><th data-i18n="th_meter">表计号</th><th class="num" data-i18n="th_usage">用电量(kWh)</th><th class="num" data-i18n="th_energy_fee">分时电费(RM)</th><th class="num" data-i18n="th_cap_share">容量分摊(RM)</th><th data-i18n="th_split_type">分摊方式</th><th class="num" data-i18n="th_afa">AFA附加费(RM)</th><th class="num" data-i18n="th_total_due">应收合计(RM)</th><th data-i18n="th_pay_status">缴费状态</th><th data-i18n="th_ops">操作</th></tr></thead><tbody></tbody></table></div><div class="pagination"><button>&laquo;</button><button class="active">1</button><button>2</button><button>&raquo;</button></div></div></div>
+      <div class="card"><div class="card-header"><h3 data-i18n="bill_mgmt_title">&#128101; 租户收费管理</h3><div style="display:flex;gap:8px;"><button class="btn btn-primary btn-sm" onclick="openGenerateBillModal()" data-i18n="gen_bill">&#128203; 生成月度账单</button><button class="btn btn-outline btn-sm" onclick="showToast('success','账单已导出')" data-i18n="export_excel">&#128229; 导出 Excel</button></div></div><div class="card-body"><div class="filter-row"><label data-i18n="filter_status">筛选状态:</label><select class="topbar-select" id="billStatusFilter" onchange="renderBillingPage()"><option value="all" data-i18n="filter_all">全部</option><option value="paid" data-i18n="pay_paid">已缴</option><option value="pending" data-i18n="pay_pending">待缴</option><option value="overdue" data-i18n="pay_overdue">欠费</option></select><label data-i18n="filter_split">分摊方式:</label><select class="topbar-select" id="billSplitFilter" onchange="renderBillingPage()"><option value="all" data-i18n="filter_all">全部</option><option value="demand" data-i18n="split_by_demand">按需求量分摊</option><option value="area" data-i18n="split_by_area">按面积分摊</option><option value="ratio" data-i18n="split_by_ratio">按比例分配</option></select></div><div style="overflow-x:auto;"><table class="data-table" id="billingPageTable"><thead><tr><th data-i18n="th_tenant">租户</th><th data-i18n="th_meter">表计号</th><th class="num" data-i18n="th_usage">用电量(kWh)</th><th class="num" data-i18n="th_energy_fee">分时电费(RM)</th><th class="num" data-i18n="th_cap_share">容量分摊(RM)</th><th data-i18n="th_split_type">分摊方式</th><th class="num" data-i18n="th_afa">AFA附加费(RM)</th><th class="num" data-i18n="th_total_due">应收合计(RM)</th><th data-i18n="th_pay_status">缴费状态</th><th data-i18n="th_ops">操作</th></tr></thead><tbody></tbody></table></div><div class="pagination"><button>&laquo;</button><button class="active">1</button><button>2</button><button>&raquo;</button></div></div></div>
       <div class="chart-row"><div class="card"><div class="card-header"><h3 data-i18n="bill_trend_title">&#128202; 月度收费趋势</h3></div><div class="card-body"><div id="billTrendChart" class="chart-box"></div></div></div><div class="card"><div class="card-header"><h3 data-i18n="bill_status_pie">&#128176; 缴费状态分布</h3></div><div class="card-body"><div id="billStatusPieChart" class="chart-box"></div></div></div></div>
     </div>
     <!-- PAGE: RATES -->
@@ -310,7 +316,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC"
         <div class="kpi-card green"><div class="kpi-label" data-i18n="rate_kpi_valley">当前谷段电价</div><div class="kpi-value mono" id="rateKpiValley">0.22<span class="kpi-unit">RM/kWh</span></div><div class="kpi-trend up" id="rateKpiValleyTrend"><span>&#8593; 4.8%</span><span data-i18n="rate_kpi_vs_last">较上期</span></div></div>
         <div class="kpi-card teal"><div class="kpi-label" data-i18n="rate_kpi_afa">当前AFA费率</div><div class="kpi-value mono" id="rateKpiAfa">0.030<span class="kpi-unit">RM/kWh</span></div><div class="kpi-trend up" id="rateKpiAfaTrend"><span>&#8593; 7.1%</span><span data-i18n="rate_kpi_vs_last">较上期</span></div></div>
       </div>
-      <div class="card"><div class="card-header"><h3 data-i18n="rate_trend_title">&#128200; 电价变化趋势</h3><button class="btn btn-primary btn-sm" onclick="openAddRateModal()" data-i18n="add_rate">+ 新增费率</button></div><div class="card-body"><div id="rateTrendChart" class="chart-box-lg"></div></div></div>
+      <div class="card"><div class="card-header"><h3 data-i18n="rate_trend_title">&#128200; 电价变化趋势</h3></div><div class="card-body"><div id="rateTrendChart" class="chart-box-lg"></div></div></div>
       <div class="chart-row"><div class="card"><div class="card-header"><h3 data-i18n="rate_history_title">&#128203; 费率历史记录</h3></div><div class="card-body"><table class="data-table" id="ratePageTable"><thead><tr><th data-i18n="th_eff_month">生效月份</th><th class="num" data-i18n="th_peak_rate">尖峰(RM/kWh)</th><th class="num" data-i18n="th_flat_rate">平段(RM/kWh)</th><th class="num" data-i18n="th_valley_rate">谷段(RM/kWh)</th><th class="num" data-i18n="th_afa_rate">AFA(RM/kWh)</th><th data-i18n="th_status">状态</th><th data-i18n="th_ops">操作</th></tr></thead><tbody></tbody></table></div></div><div class="card"><div class="card-header"><h3 data-i18n="rate_audit_title">&#128221; 费率变更日志</h3></div><div class="card-body"><div class="timeline" id="rateTimeline"></div></div></div></div>
     </div>
     <!-- PAGE: SETTINGS -->
@@ -349,6 +355,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC"
 <div class="modal-overlay" id="billDetailModal"><div class="modal" style="width:700px;"><div class="modal-header"><h3 data-i18n="modal_bill_detail">&#128203; 账单明细</h3><button class="modal-close" onclick="closeModal('billDetailModal')">&times;</button></div><div class="modal-body" id="billDetailContent" style="max-height:60vh;overflow-y:auto;"></div><div class="modal-footer" id="billDetailFooter"><button class="btn btn-outline" onclick="closeModal('billDetailModal')" data-i18n="btn_close">关闭</button><button class="btn btn-primary" onclick="showBillEmailInput()" data-i18n="btn_generate_bill">&#128203; 生成账单</button></div></div></div>
 <div class="modal-overlay" id="billEmailModal"><div class="modal" style="width:450px;"><div class="modal-header"><h3>&#128231; 发送至租户邮箱</h3><button class="modal-close" onclick="closeModal('billEmailModal')">&times;</button></div><div class="modal-body"><div class="form-group"><label class="form-label">租户邮箱</label><input class="form-input" type="email" id="billEmailInput" placeholder="请输入租户邮箱地址"></div><div id="billEmailPreview" style="font-size:12px;color:var(--text-muted);margin-top:8px;"></div></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('billEmailModal')">取消</button><button class="btn btn-primary" onclick="sendBillEmail()">&#128231; 发送PDF账单</button></div></div></div>
 <div class="modal-overlay" id="billHistoryModal"><div class="modal" style="width:750px;"><div class="modal-header"><h3>&#128203; 历史账单记录</h3><button class="modal-close" onclick="closeModal('billHistoryModal')">&times;</button></div><div class="modal-body" id="billHistoryContent" style="max-height:60vh;overflow-y:auto;"></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('billHistoryModal')">关闭</button></div></div></div>
+<div class="modal-overlay" id="generateBillModal"><div class="modal" style="width:780px;"><div class="modal-header"><h3>&#128203; 生成月度账单</h3><button class="modal-close" onclick="closeModal('generateBillModal')">&times;</button></div><div class="modal-body"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><select class="form-input" id="genBillMonthSelect" style="flex:1;min-width:140px;" onchange="onMonthSelectChange()"></select></div><div id="genBillSummary" class="gen-bill-summary"></div><div id="genBillPreview" style="max-height:340px;overflow-y:auto;margin-top:12px;"></div></div><div class="modal-footer" style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-outline" onclick="closeModal('generateBillModal')">取消</button><div style="flex:1;"></div><button class="btn btn-outline" onclick="downloadBillExcel()" style="border-color:var(--accent);color:var(--accent);">&#128229; 下载 Excel</button><button class="btn btn-primary" onclick="downloadBillPDF()">&#128196; 下载 PDF</button></div></div></div>
 <div class="modal-overlay" id="tenantModal"><div class="modal" style="width:550px;"><div class="modal-header"><h3 id="tenantModalTitle">&#10133; 新增租户</h3><button class="modal-close" onclick="closeModal('tenantModal')">&times;</button></div><div class="modal-body"><div class="form-group"><label class="form-label" data-i18n="tenant_name">租户名称</label><input class="form-input" type="text" id="tmName" placeholder="请输入租户名称"></div><div class="form-row"><div class="form-group"><label class="form-label" data-i18n="tenant_meter">表计号</label><input class="form-input mono" type="text" id="tmMeter" placeholder="M-XXXX"></div><div class="form-group"><label class="form-label" data-i18n="tenant_contact">联系人</label><input class="form-input" type="text" id="tmContact" placeholder="请输入联系人"></div></div><div class="form-row"><div class="form-group"><label class="form-label" data-i18n="tenant_phone">联系电话</label><input class="form-input mono" type="text" id="tmPhone" placeholder="+60 XX-XXX XXXX"></div><div class="form-group"><label class="form-label" data-i18n="tenant_email">邮件地址</label><input class="form-input" type="email" id="tmEmail" placeholder="email@example.com"></div></div><div class="form-row"><div class="form-group"><label class="form-label" data-i18n="tenant_contract">合同容量(kW)</label><input class="form-input mono" type="number" id="tmContract" placeholder="200"></div><div class="form-group"><label class="form-label" data-i18n="tenant_split">分摊方式</label><select class="form-input" id="tmSplit"><option value="demand" data-i18n="split_by_demand">按需求量</option><option value="area" data-i18n="split_by_area">按面积</option><option value="ratio" data-i18n="split_by_ratio">按比例</option></select></div></div></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('tenantModal')" data-i18n="btn_cancel">取消</button><button class="btn btn-primary" onclick="saveTenant()" data-i18n="btn_confirm">确认</button></div></div></div>
 <div class="modal-overlay" id="touEditModal"><div class="modal" style="width:600px;"><div class="modal-header"><h3 id="touEditTitle">&#9881;&#65039; 编辑时段配置</h3><button class="modal-close" onclick="closeModal('touEditModal')">&times;</button></div><div class="modal-body"><div class="form-group"><label class="form-label" data-i18n="tou_period">时段名称</label><input class="form-input" type="text" id="touEditName" readonly style="background:var(--bg);"></div><div class="form-group"><label class="form-label" data-i18n="tou_time">时间范围</label><div id="touTimeSegments" style="margin-bottom:8px;"></div><button class="btn btn-outline btn-sm" onclick="addTouTimeSegment()" style="font-size:12px;padding:4px 12px;">+ 添加时间段</button></div><div class="form-group"><label class="form-label" data-i18n="tou_rate">电价(RM/kWh)</label><input class="form-input mono" type="number" step="0.01" id="touEditRate" style="width:120px;"></div></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('touEditModal')" data-i18n="btn_cancel">取消</button><button class="btn btn-primary" onclick="saveTouEdit()" data-i18n="btn_confirm">确认保存</button></div></div></div>
 <div class="modal-overlay" id="rateDetailModal"><div class="modal"><div class="modal-header"><h3 data-i18n="modal_rate_detail">&#128202; 费率对比</h3><button class="modal-close" onclick="closeModal('rateDetailModal')">&times;</button></div><div class="modal-body" id="rateDetailContent"></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('rateDetailModal')" data-i18n="btn_close">关闭</button></div></div></div>
@@ -374,10 +381,10 @@ function t(k) { return i18n[currentLang][k] || k; }
 
 const baseTenants = [
   { name:'星辰科技', meter:'M-1001', contract:300, split:'demand', contact:'张伟', phone:'+60 12-111 0001', email:'zhangwei@xingchen.com' },
-  { name:'蓝海物流', meter:'M-1002', contract:250, split:'area', contact:'李明', phone:'+60 12-222 0002', email:'liming@lanhai.com' },
+  { name:'蓝海物流', meter:'M-1002', contract:250, split:'demand', contact:'李明', phone:'+60 12-222 0002', email:'liming@lanhai.com' },
   { name:'鼎盛制造', meter:'M-1003', contract:350, split:'demand', contact:'王芳', phone:'+60 12-333 0003', email:'wangfang@dingsheng.com' },
-  { name:'云帆数据', meter:'M-1004', contract:200, split:'ratio', contact:'陈杰', phone:'+60 12-444 0004', email:'chenjie@yunfan.com' },
-  { name:'万象商贸', meter:'M-1005', contract:100, split:'area', contact:'赵丽', phone:'+60 12-555 0005', email:'zhaoli@wanxiang.com' }
+  { name:'云帆数据', meter:'M-1004', contract:200, split:'demand', contact:'陈杰', phone:'+60 12-444 0004', email:'chenjie@yunfan.com' },
+  { name:'万象商贸', meter:'M-1005', contract:100, split:'demand', contact:'赵丽', phone:'+60 12-555 0005', email:'zhaoli@wanxiang.com' }
 ];
 
 const monthProfiles = {};
@@ -507,6 +514,23 @@ function updateTrendKpiUtil(util){
   else{el.className='kpi-trend neutral';el.style.background='var(--accent-light)';el.style.color='#065F46';el.innerHTML='<span>'+t('kpi_normal')+'</span>';}
 }
 
+function calcMonthFullCost(m, tIdxs){
+  const mp=monthProfiles[m], r=getRateForMonth(m);
+  const totalCap=tIdxs.reduce((s,j)=>s+baseTenants[j].contract,0);
+  const totalActual=mp.actuals.reduce((a,b)=>a+b,0);
+  return tIdxs.reduce((s,i)=>{
+    const bt=baseTenants[i];
+    const energyFee=mp.touPk[i]*r.peak+mp.touFt[i]*r.flat+mp.touVl[i]*r.valley;
+    let capShare=0;
+    if(bt.split==='demand')capShare=Math.round(energyFee*0.2*(mp.actuals[i]/totalActual));
+    else if(bt.split==='area')capShare=Math.round(energyFee*0.2*(bt.contract/totalCap));
+    else capShare=Math.round(energyFee*0.2*0.2);
+    const usage=mp.touPk[i]+mp.touFt[i]+mp.touVl[i];
+    const afa=Math.round(usage*r.afa);
+    return s+Math.round(energyFee)+capShare+afa;
+  },0);
+}
+
 function updateOverviewKPIs(){
   const at=getActiveTenantIndices(), months=getActiveMonths(), lastMonth=months[months.length-1];
   const profile=monthProfiles[lastMonth];
@@ -518,15 +542,17 @@ function updateOverviewKPIs(){
   document.getElementById('kpiActual').innerHTML=fmt(actual)+'<span class="kpi-unit">kW</span>';
   document.getElementById('kpiUtil').innerHTML=util.toFixed(1)+'<span class="kpi-unit">%</span>';
   document.getElementById('kpiCost').textContent='RM '+fmt(Math.round(cost));
-  let prevActual=0;
-  if(months.length>1){const pm=months[months.length-2];prevActual=at.reduce((s,i)=>s+monthProfiles[pm].actuals[i],0);}
-  else{const mi=allMonths.indexOf(lastMonth);if(mi>0){const pm=allMonths[mi-1];prevActual=at.reduce((s,i)=>s+monthProfiles[pm].actuals[i],0);}}
+  let prevActual=0,prevCost=0,prevMonth=null;
+  if(months.length>1){prevMonth=months[months.length-2];}
+  else{const mi=allMonths.indexOf(lastMonth);if(mi>0)prevMonth=allMonths[mi-1];}
+  if(prevMonth){
+    prevActual=at.reduce((s,i)=>s+monthProfiles[prevMonth].actuals[i],0);
+    prevCost=calcMonthFullCost(prevMonth,at);
+  }
   const actualDiff=prevActual>0?((actual-prevActual)/prevActual*100):0;
   updateTrend('kpiContractTrend',0,true);
   updateTrend('kpiActualTrend',actualDiff,false);
   updateTrendKpiUtil(util);
-  let prevCost=0;
-  if(months.length>1){const pm=months[months.length-2];const pr=getRateForMonth(pm);prevCost=at.reduce((s,i)=>{const p=monthProfiles[pm];return s+p.touPk[i]*pr.peak+p.touFt[i]*pr.flat+p.touVl[i]*pr.valley;},0);}
   const costDiff=prevCost>0?((cost-prevCost)/prevCost*100):0;
   updateTrend('kpiCostTrend',costDiff,false);
   const ringPct=Math.min(util,100),circumference=2*Math.PI*30,offset=circumference*(1-ringPct/100);
@@ -575,16 +601,20 @@ function updateTouKPIs(){
   document.getElementById('periodFlatRate').innerHTML='RM '+ftRate.toFixed(2)+'<span style="font-size:12px;color:var(--text-muted);">/kWh</span>';
   document.getElementById('periodValleyRate').innerHTML='RM '+vlRate.toFixed(2)+'<span style="font-size:12px;color:var(--text-muted);">/kWh</span>';
   const months=getActiveMonths();
-  if(months.length>1){
-    const pm=months[months.length-2],pr=getRateForMonth(pm),pp=monthProfiles[pm];
-    const at=getActiveTenantIndices();
+  const at=getActiveTenantIndices();
+  let prevMonth=null;
+  if(months.length>1){prevMonth=months[months.length-2];}
+  else{const mi=allMonths.indexOf(months[0]);if(mi>0)prevMonth=allMonths[mi-1];}
+  if(prevMonth){
+    const pr=getRateForMonth(prevMonth),pp=monthProfiles[prevMonth];
     let pPk=0,pFt=0,pVl=0;
     at.forEach(i=>{pPk+=pp.touPk[i];pFt+=pp.touFt[i];pVl+=pp.touVl[i];});
     const pPkCost=pPk*pr.peak,pFtCost=pFt*pr.flat,pVlCost=pVl*pr.valley;
+    const pTotalCost=pPkCost+pFtCost+pVlCost;
     updateTrend('touKpiPeakTrend',pPkCost>0?(pkCost-pPkCost)/pPkCost*100:false);
     updateTrend('touKpiFlatTrend',pFtCost>0?(ftCost-pFtCost)/pFtCost*100:false);
     updateTrend('touKpiValleyTrend',pVlCost>0?(vlCost-pVlCost)/pVlCost*100:false);
-    updateTrend('touKpiTotalTrend',pp.prevCost>0?(totalCost-pp.prevCost)/pp.prevCost*100:false);
+    updateTrend('touKpiTotalTrend',pTotalCost>0?(totalCost-pTotalCost)/pTotalCost*100:false);
   }
 }
 
@@ -716,6 +746,171 @@ function sendBillEmail(){
   if(!email||!email.includes('@')){showToast('error',currentLang==='zh'?'请输入有效邮箱':'Enter valid email');return;}
   closeModal('billEmailModal');
   showToast('success',t('msg_email_sent')+' '+email);
+}
+
+let genBillSelectedMonths = ['2026-11'];
+let genBillTenantIndices = [0,1,2,3,4];
+
+function openGenerateBillModal(){
+  genBillTenantIndices = getActiveTenantIndices();
+  const topMonths = getActiveMonths();
+  if(topMonths.length === allMonths.length){
+    genBillSelectedMonths = allMonths.slice();
+  } else {
+    genBillSelectedMonths = topMonths.slice();
+  }
+  const sel = document.getElementById('genBillMonthSelect');
+  sel.innerHTML = '';
+  const optAll = document.createElement('option');
+  optAll.value = 'ALL'; optAll.textContent = 'ALL（全部月份）';
+  sel.appendChild(optAll);
+  allMonths.forEach(function(m){
+    const opt = document.createElement('option');
+    opt.value = m; opt.textContent = m;
+    sel.appendChild(opt);
+  });
+  if(genBillSelectedMonths.length === allMonths.length){
+    sel.value = 'ALL';
+  } else if(genBillSelectedMonths.length === 1){
+    sel.value = genBillSelectedMonths[0];
+  } else {
+    sel.value = genBillSelectedMonths[0];
+  }
+  renderGenBillPreview();
+  updateBillSummary();
+  openModal('generateBillModal');
+}
+
+function onMonthSelectChange(){
+  const v = document.getElementById('genBillMonthSelect').value;
+  if(v === 'ALL'){
+    genBillSelectedMonths = allMonths.slice();
+  } else {
+    genBillSelectedMonths = [v];
+  }
+  renderGenBillPreview();
+  updateBillSummary();
+}
+
+function updateBillSummary(){
+  const el = document.getElementById('genBillSummary');
+  const n = genBillSelectedMonths.length;
+  if(n === 0){ el.innerHTML = '<span style="color:var(--danger);">请至少选择一个月份</span>'; return; }
+  let label = '';
+  if(n === 1) label = genBillSelectedMonths[0];
+  else if(n === allMonths.length) label = '全部 '+n+' 个月';
+  else label = '已选 '+n+' 个月：'+genBillSelectedMonths.join('、');
+  el.innerHTML = '<span>账单范围：</span><strong>'+label+'</strong>';
+}
+
+function getSelectedMonths(){
+  return genBillSelectedMonths.slice();
+}
+
+function calcTenantMonth(bt, i, m){
+  const mp = monthProfiles[m]; if(!mp) return null;
+  const r = getRateForMonth(m);
+  const pk = mp.touPk[i], ft = mp.touFt[i], vl = mp.touVl[i], usage = pk+ft+vl;
+  const energyFee = Math.round(pk*r.peak+ft*r.flat+vl*r.valley);
+  const totalCap = baseTenants.reduce(function(s,b){return s+b.contract;},0);
+  const totalActual = mp.actuals.reduce(function(a,b){return a+b;},0);
+  let capShare = 0;
+  if(bt.split==='demand') capShare = Math.round(energyFee*0.2*(mp.actuals[i]/totalActual));
+  else if(bt.split==='area') capShare = Math.round(energyFee*0.2*(bt.contract/totalCap));
+  else capShare = Math.round(energyFee*0.2*0.2);
+  const afa = Math.round(usage*r.afa);
+  return {usage:usage, energyFee:energyFee, capShare:capShare, afa:afa, total:energyFee+capShare+afa};
+}
+
+function renderGenBillPreview(){
+  const months = getSelectedMonths();
+  if(!months.length){ document.getElementById('genBillPreview').innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:24px;">请选择月份</p>'; return; }
+  const container = document.getElementById('genBillPreview');
+  const isMulti = months.length > 1;
+  const tenantIdx = genBillTenantIndices;
+  let html = '<div class="bill-pdf-preview">';
+  const monthLabel = months.length === 1 ? months[0] : months[0]+' ~ '+months[months.length-1];
+  html += '<div class="bill-pdf-header"><h2>'+(currentLang==='zh'?'月度账单':'Monthly Bill')+'</h2><p>'+(currentLang==='zh'?'账单月份':'Billing Month')+': '+monthLabel+' | UNEED '+(currentLang==='zh'?'数字能源管理平台':'Digital Energy Management Platform')+'</p></div>';
+  html += '<div class="bill-pdf-section"><h4>'+(currentLang==='zh'?'各租户账单明细':'Tenant Billing Details')+'</h4>';
+  let grandUsage=0,grandEnergy=0,grandCap=0,grandAfa=0,grandTotal=0;
+  if(isMulti){
+    html += '<table class="bill-pdf-table"><thead><tr><th>'+(currentLang==='zh'?'月份':'Month')+'</th><th>'+(currentLang==='zh'?'租户':'Tenant')+'</th><th>'+(currentLang==='zh'?'用电量':'Usage')+'(kWh)</th><th>'+(currentLang==='zh'?'分时电费':'Energy')+'(RM)</th><th>'+(currentLang==='zh'?'容量分摊':'Capacity')+'(RM)</th><th>AFA(RM)</th><th>'+(currentLang==='zh'?'应收合计':'Total')+'(RM)</th></tr></thead><tbody>';
+    months.forEach(function(m){
+      let mUsage=0,mEnergy=0,mCap=0,mAfa=0,mTotal=0;
+      tenantIdx.forEach(function(i){
+        const bt = baseTenants[i]; if(!bt) return;
+        const d = calcTenantMonth(bt,i,m); if(!d) return;
+        mUsage+=d.usage;mEnergy+=d.energyFee;mCap+=d.capShare;mAfa+=d.afa;mTotal+=d.total;
+        html+='<tr><td style="font-weight:600;">'+m+'</td><td>'+bt.name+'</td><td class="num">'+d.usage.toLocaleString()+'</td><td class="num">'+fmt(d.energyFee)+'</td><td class="num">'+fmt(d.capShare)+'</td><td class="num">'+fmt(d.afa)+'</td><td class="num" style="font-weight:700;">'+fmt(d.total)+'</td></tr>';
+      });
+      grandUsage+=mUsage;grandEnergy+=mEnergy;grandCap+=mCap;grandAfa+=mAfa;grandTotal+=mTotal;
+      html+='<tr style="font-weight:700;background:#F0F7FF;"><td colspan="2">'+(currentLang==='zh'?'小计':'Subtotal')+' ('+m+')</td><td class="num">'+mUsage.toLocaleString()+'</td><td class="num">'+fmt(mEnergy)+'</td><td class="num">'+fmt(mCap)+'</td><td class="num">'+fmt(mAfa)+'</td><td class="num">'+fmt(mTotal)+'</td></tr>';
+    });
+    html+='<tr style="font-weight:700;background:var(--bg);"><td colspan="2">'+(currentLang==='zh'?'合计':'Total')+'</td><td class="num">'+grandUsage.toLocaleString()+'</td><td class="num">'+fmt(grandEnergy)+'</td><td class="num">'+fmt(grandCap)+'</td><td class="num">'+fmt(grandAfa)+'</td><td class="num" style="color:var(--primary);">'+fmt(grandTotal)+'</td></tr>';
+  } else {
+    html += '<table class="bill-pdf-table"><thead><tr><th>'+(currentLang==='zh'?'租户':'Tenant')+'</th><th>'+(currentLang==='zh'?'用电量':'Usage')+'(kWh)</th><th>'+(currentLang==='zh'?'分时电费':'Energy')+'(RM)</th><th>'+(currentLang==='zh'?'容量分摊':'Capacity')+'(RM)</th><th>AFA(RM)</th><th>'+(currentLang==='zh'?'应收合计':'Total')+'(RM)</th></tr></thead><tbody>';
+    tenantIdx.forEach(function(i){
+      const bt = baseTenants[i]; if(!bt) return;
+      const d = calcTenantMonth(bt,i,months[0]); if(!d) return;
+      grandUsage+=d.usage;grandEnergy+=d.energyFee;grandCap+=d.capShare;grandAfa+=d.afa;grandTotal+=d.total;
+      html+='<tr><td style="font-weight:600;">'+bt.name+'</td><td class="num">'+d.usage.toLocaleString()+'</td><td class="num">'+fmt(d.energyFee)+'</td><td class="num">'+fmt(d.capShare)+'</td><td class="num">'+fmt(d.afa)+'</td><td class="num" style="font-weight:700;">'+fmt(d.total)+'</td></tr>';
+    });
+    html+='<tr style="font-weight:700;background:var(--bg);"><td>'+(currentLang==='zh'?'合计':'Total')+'</td><td class="num">'+grandUsage.toLocaleString()+'</td><td class="num">'+fmt(grandEnergy)+'</td><td class="num">'+fmt(grandCap)+'</td><td class="num">'+fmt(grandAfa)+'</td><td class="num" style="color:var(--primary);">'+fmt(grandTotal)+'</td></tr>';
+  }
+  html+='</tbody></table></div>';
+  html+='<div class="bill-pdf-total"><span class="total-label">'+(currentLang==='zh'?'应收总计':'Grand Total')+'</span><span class="total-value" style="font-weight:800;font-size:16px;color:var(--primary);">RM '+fmt(grandTotal)+'</span></div>';
+  html+='</div>';
+  container.innerHTML=html;
+}
+
+function downloadBillPDF(){
+  const months = getSelectedMonths();
+  if(!months.length){ showToast('warning', currentLang==='zh'?'请至少选择一个月份':'Select at least one month'); return; }
+  var printContent = document.getElementById('genBillPreview').innerHTML;
+  var monthLabel = months.length === 1 ? months[0] : months[0]+' ~ '+months[months.length-1];
+  var win = window.open('','','width=900,height=700');
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+(currentLang==='zh'?'月度账单':'Monthly Bill')+' - '+monthLabel+'</title><style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;font-size:13px;color:#111827;padding:24px;}table{width:100%;border-collapse:collapse;margin-bottom:16px;}th,td{border:1px solid #E5E7EB;padding:8px 12px;text-align:left;}th{background:#F3F4F6;font-weight:600;font-size:12px;}.num{text-align:right;font-family:Consolas,monospace;}.bill-pdf-header{text-align:center;border-bottom:2px solid #1E4E8C;padding-bottom:16px;margin-bottom:16px;}.bill-pdf-header h2{color:#1E4E8C;font-size:18px;margin-bottom:4px;}.bill-pdf-header p{color:#6B7280;font-size:12px;}.bill-pdf-section{margin-bottom:16px;}.bill-pdf-section h4{color:#1E4E8C;font-size:13px;margin-bottom:8px;border-left:3px solid #1E4E8C;padding-left:8px;}.bill-pdf-table th,.bill-pdf-table td{border:1px solid #E5E7EB;padding:6px 10px;}.bill-pdf-table th{background:#F3F4F6;font-weight:600;color:#6B7280;}.bill-pdf-table td.num{text-align:right;font-family:Consolas,monospace;}.bill-pdf-total{background:#F3F4F6;padding:12px;border-radius:6px;margin-top:12px;display:flex;justify-content:space-between;align-items:center;}.total-label{font-weight:600;color:#6B7280;}</style></head><body>');
+  win.document.write(printContent);
+  win.document.write('</body></html>');
+  win.document.close();
+  setTimeout(function(){win.print();},500);
+  showToast('success', currentLang==='zh'?'PDF账单已生成，请在弹出窗口中保存':'PDF bill generated, save in the print dialog');
+}
+
+function downloadBillExcel(){
+  const months = getSelectedMonths();
+  if(!months.length){ showToast('warning', currentLang==='zh'?'请至少选择一个月份':'Select at least one month'); return; }
+  let csv = '\uFEFF';
+  const monthLabel = months.length === 1 ? months[0] : months[0]+'~'+months[months.length-1];
+  const isMulti = months.length > 1;
+  csv += (currentLang==='zh'?'UNEED月度账单':'UNEED Monthly Bill')+' - '+monthLabel+'\n\n';
+  if(isMulti){
+    csv += (currentLang==='zh'?'月份':'Month')+','+(currentLang==='zh'?'租户':'Tenant')+','+(currentLang==='zh'?'表计号':'Meter')+','+(currentLang==='zh'?'用电量(kWh)':'Usage(kWh)')+','+(currentLang==='zh'?'分时电费(RM)':'Energy(RM)')+','+(currentLang==='zh'?'容量分摊(RM)':'Capacity(RM)')+','+'AFA(RM),'+(currentLang==='zh'?'应收合计(RM)':'Total(RM)')+','+(currentLang==='zh'?'分摊方式':'Split')+'\n';
+  } else {
+    csv += (currentLang==='zh'?'租户':'Tenant')+','+(currentLang==='zh'?'表计号':'Meter')+','+(currentLang==='zh'?'用电量(kWh)':'Usage(kWh)')+','+(currentLang==='zh'?'分时电费(RM)':'Energy(RM)')+','+(currentLang==='zh'?'容量分摊(RM)':'Capacity(RM)')+','+'AFA(RM),'+(currentLang==='zh'?'应收合计(RM)':'Total(RM)')+','+(currentLang==='zh'?'分摊方式':'Split')+'\n';
+  }
+  let grandUsage=0,grandEnergy=0,grandCap=0,grandAfa=0,grandTotal=0;
+  months.forEach(function(m){
+    let mUsage=0,mEnergy=0,mCap=0,mAfa=0,mTotal=0;
+    genBillTenantIndices.forEach(function(i){
+      const bt = baseTenants[i]; if(!bt) return;
+      const d = calcTenantMonth(bt,i,m); if(!d) return;
+      mUsage+=d.usage;mEnergy+=d.energyFee;mCap+=d.capShare;mAfa+=d.afa;mTotal+=d.total;
+      const splitLabel=bt.split==='demand'?(currentLang==='zh'?'按需求量':'By Demand'):bt.split==='area'?(currentLang==='zh'?'按面积':'By Area'):(currentLang==='zh'?'按比例':'By Ratio');
+      if(isMulti) csv+=m+',';
+      csv+=bt.name+','+bt.meter+','+d.usage+','+d.energyFee+','+d.capShare+','+d.afa+','+d.total+','+splitLabel+'\n';
+    });
+    grandUsage+=mUsage;grandEnergy+=mEnergy;grandCap+=mCap;grandAfa+=mAfa;grandTotal+=mTotal;
+    if(isMulti) csv+=(currentLang==='zh'?'小计':'Subtotal')+' ('+m+'),,'+mUsage+','+mEnergy+','+mCap+','+mAfa+','+mTotal+',\n';
+  });
+  csv+=(currentLang==='zh'?'合计':'Total')+',,'+grandUsage+','+grandEnergy+','+grandCap+','+grandAfa+','+grandTotal+'\n';
+  var blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  var link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'UNEED_'+(currentLang==='zh'?'月度账单':'Monthly_Bill')+'_'+monthLabel+'.csv';
+  link.click();
+  URL.revokeObjectURL(link.href);
+  showToast('success', currentLang==='zh'?'Excel账单已下载':'Excel bill downloaded');
 }
 
 function openBillHistory(idx){
