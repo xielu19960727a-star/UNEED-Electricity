@@ -66,6 +66,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC"
 .kpi-trend.down { background: var(--accent-light); color: var(--accent); }
 .kpi-trend.neutral { background: #F3F4F6; color: var(--text-secondary); }
 .kpi-ring { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); }
+.kpi-foot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.kpi-foot .kpi-trend { margin-top: 0; }
+.kpi-note { font-size: 11px; color: var(--text-muted); }
 .badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; white-space: nowrap; }
 .badge-green { background: var(--accent-light); color: #065F46; }
 .badge-amber { background: var(--warning-light); color: #92400E; }
@@ -210,6 +213,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC"
 .bill-history-table th { background: var(--bg); font-weight: 600; color: var(--text-secondary); }
 .bill-history-table td.num { text-align: right; font-family: "JetBrains Mono", monospace; }
 .bill-history-table tr:hover { background: var(--row-hover); }
+.fee-config-block { margin-top: 28px; padding-top: 24px; border-top: 1px dashed var(--border); }
+.nowrap-table th, .nowrap-table td { white-space: nowrap; }
 
 .multi-select { position: relative; min-width: 150px; }
 .multi-select-btn { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 7px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; color: var(--text); background: #fff; cursor: pointer; outline: none; min-width: 150px; text-align: left; transition: border-color 0.2s; }
@@ -262,10 +267,10 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC"
         <div class="kpi-card blue"><div class="kpi-label" data-i18n="kpi_contract">合同预订容量</div><div class="kpi-value mono" id="kpiContract">1,200<span class="kpi-unit">kW</span></div><div class="kpi-trend neutral" id="kpiContractTrend"><span>&#8212;</span><span data-i18n="kpi_stable">环比持平</span></div></div>
         <div class="kpi-card green"><div class="kpi-label" data-i18n="kpi_actual">实际最大需量</div><div class="kpi-value mono" id="kpiActual">1,092<span class="kpi-unit">kW</span></div><div class="kpi-trend down" id="kpiActualTrend"><span>&#8595; 2.1%</span><span data-i18n="kpi_down">较上月下降</span></div></div>
         <div class="kpi-card amber"><div class="kpi-label" data-i18n="kpi_util">容量利用率</div><div style="display:flex;align-items:center;gap:16px;"><div><div class="kpi-value mono" id="kpiUtil">91<span class="kpi-unit">%</span></div><div class="kpi-trend neutral" id="kpiUtilTrend" style="background:var(--accent-light);color:#065F46;"><span data-i18n="kpi_normal">正常范围</span></div></div><div class="kpi-ring" id="kpiRingWrap"><svg width="72" height="72" viewBox="0 0 72 72"><circle cx="36" cy="36" r="30" fill="none" stroke="#E5E7EB" stroke-width="6"/><circle id="kpiRingArc" cx="36" cy="36" r="30" fill="none" stroke="#0E9F6E" stroke-width="6" stroke-dasharray="172.8" stroke-dashoffset="15.5" stroke-linecap="round" transform="rotate(-90 36 36)"/><text id="kpiRingText" x="36" y="38" text-anchor="middle" font-size="11" font-weight="700" fill="#111827">91%</text></svg></div></div></div>
-        <div class="kpi-card teal"><div class="kpi-label" data-i18n="kpi_cost">本月总电费</div><div class="kpi-value mono" id="kpiCost" style="font-size:24px;">RM 86,420</div><div class="kpi-trend up" id="kpiCostTrend"><span>&#8593; 3.2%</span><span data-i18n="kpi_up">环比上升</span></div></div>
+        <div class="kpi-card teal"><div class="kpi-label" data-i18n="kpi_cost">本月总电费</div><div class="kpi-value mono" id="kpiCost" style="font-size:24px;">RM 86,420</div><div class="kpi-foot"><div class="kpi-trend up" id="kpiCostTrend"><span>&#8593; 3.2%</span><span data-i18n="kpi_up">环比上升</span></div><span class="kpi-note" data-i18n="kpi_cost_note">已包含分摊以及附加费</span></div></div>
       </div>
       <div class="card"><div class="card-header"><h3 data-i18n="capacity_title">&#128200; 容量利用率监控</h3><button class="btn btn-outline btn-sm" onclick="navigateTo('capacity')" data-i18n="view_detail">查看详情</button></div><div class="card-body"><div class="chart-row-60-40"><div><div id="ovCapacityChart" class="chart-box"></div></div><div><div class="toolbar"><strong style="font-size:13px;" data-i18n="alert_list">&#9888;&#65039; 预警列表</strong><button class="btn btn-outline btn-sm" onclick="openThresholdModal()" data-i18n="threshold_config">阈值: 85%</button></div><div style="max-height:280px;overflow-y:auto;"><table class="data-table" id="ovAlertTable"><thead><tr><th data-i18n="th_tenant_meter">租户/表计</th><th class="num" data-i18n="th_contract_cap">合同容量</th><th class="num" data-i18n="th_actual">实际需量</th><th class="num" data-i18n="th_util">利用率</th><th data-i18n="th_status">状态</th><th data-i18n="th_action">建议</th></tr></thead><tbody></tbody></table></div></div></div></div></div>
-      <div class="card"><div class="card-header"><h3 data-i18n="tou_title">&#128336; 分时电价成本拆分</h3><button class="btn btn-outline btn-sm" onclick="navigateTo('tou')" data-i18n="view_detail">查看详情</button></div><div class="card-body"><div class="chart-row-60-40" style="margin-bottom:20px;"><div><div id="ovTouBarChart" class="chart-box"></div></div><div><div id="ovTouPieChart" class="chart-box"></div></div></div><div class="toolbar"><strong style="font-size:13px;" data-i18n="tou_tenant_detail">各租户分时用电明细</strong><button class="btn btn-outline btn-sm" onclick="showToast('success','计费依据已导出')" data-i18n="export_billing">&#128229; 导出计费依据</button></div><table class="data-table" id="ovTouDetailTable"><thead><tr><th data-i18n="th_tenant">租户</th><th class="num" data-i18n="th_peak_kwh">尖峰(kWh)</th><th class="num" data-i18n="th_flat_kwh">平段(kWh)</th><th class="num" data-i18n="th_valley_kwh">谷段(kWh)</th><th class="num" data-i18n="th_total_kwh">总用电(kWh)</th><th class="num" data-i18n="th_total_cost">合计(RM)</th></tr></thead><tbody></tbody></table></div></div>
+      <div class="card"><div class="card-header"><h3 data-i18n="tou_title">&#128336; 分时电价成本拆分</h3><button class="btn btn-outline btn-sm" onclick="navigateTo('tou')" data-i18n="view_detail">查看详情</button></div><div class="card-body"><div class="chart-row-60-40" style="margin-bottom:20px;"><div><div id="ovTouBarChart" class="chart-box"></div></div><div><div id="ovTouPieChart" class="chart-box"></div></div></div><div class="toolbar"><strong style="font-size:13px;" data-i18n="tou_tenant_detail">各租户分时用电明细</strong><span style="font-size:11px;color:var(--text-muted);margin-right:auto;margin-left:10px;" data-i18n="tou_detail_hint">合计电费 = 分时电费 + 容量分摊 + AFA附加费，与本月总电费一致</span><button class="btn btn-outline btn-sm" onclick="showToast('success','计费依据已导出')" data-i18n="export_billing">&#128229; 导出计费依据</button></div><div style="overflow-x:auto;"><table class="data-table nowrap-table" id="ovTouDetailTable"><thead><tr><th data-i18n="th_tenant">租户</th><th class="num" data-i18n="th_peak_kwh">尖峰(kWh)</th><th class="num" data-i18n="th_flat_kwh">平段(kWh)</th><th class="num" data-i18n="th_valley_kwh">谷段(kWh)</th><th class="num" data-i18n="th_total_kwh">总用电(kWh)</th><th class="num" data-i18n="th_energy_fee">分时电费(RM)</th><th class="num" data-i18n="th_extra_fee">容量分摊+附加(RM)</th><th class="num" data-i18n="th_total_bill">合计电费(RM)</th></tr></thead><tbody></tbody></table></div></div></div>
       <div class="card"><div class="card-header"><h3 data-i18n="billing_title">&#128101; 租户收费管理</h3><button class="btn btn-outline btn-sm" onclick="navigateTo('billing')" data-i18n="view_detail">查看详情</button></div><div class="card-body"><div style="overflow-x:auto;"><table class="data-table" id="ovBillingTable"><thead><tr><th data-i18n="th_tenant">租户</th><th class="num" data-i18n="th_total_due">应收合计(RM)</th><th data-i18n="th_pay_status">缴费状态</th><th data-i18n="th_ops">操作</th></tr></thead><tbody></tbody></table></div></div></div>
     </div>
     <!-- PAGE: CAPACITY -->
@@ -286,7 +291,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC"
         <div class="kpi-card red"><div class="kpi-label" data-i18n="tou_kpi_peak">尖峰电费</div><div class="kpi-value mono" id="touKpiPeak" style="font-size:22px;">RM 32,860</div><div class="kpi-trend up" id="touKpiPeakTrend"><span>&#8593; 4.1%</span><span data-i18n="kpi_up">环比上升</span></div></div>
         <div class="kpi-card blue"><div class="kpi-label" data-i18n="tou_kpi_flat">平段电费</div><div class="kpi-value mono" id="touKpiFlat" style="font-size:22px;">RM 36,120</div><div class="kpi-trend neutral" id="touKpiFlatTrend"><span>&#8212;</span><span data-i18n="kpi_stable">环比持平</span></div></div>
         <div class="kpi-card green"><div class="kpi-label" data-i18n="tou_kpi_valley">谷段电费</div><div class="kpi-value mono" id="touKpiValley" style="font-size:22px;">RM 17,440</div><div class="kpi-trend down" id="touKpiValleyTrend"><span>&#8595; 1.8%</span><span data-i18n="kpi_down">较上月下降</span></div></div>
-        <div class="kpi-card teal"><div class="kpi-label" data-i18n="tou_kpi_total">本月总电费</div><div class="kpi-value mono" id="touKpiTotal" style="font-size:22px;">RM 86,420</div><div class="kpi-trend up" id="touKpiTotalTrend"><span>&#8593; 3.2%</span><span data-i18n="kpi_up">环比上升</span></div></div>
+        <div class="kpi-card teal"><div class="kpi-label" data-i18n="tou_kpi_total">分时电费合计</div><div class="kpi-value mono" id="touKpiTotal" style="font-size:22px;">RM 86,420</div><div class="kpi-trend up" id="touKpiTotalTrend"><span>&#8593; 3.2%</span><span data-i18n="kpi_up">环比上升</span></div></div>
       </div>
       <div class="period-cards" id="touPeriodCards">
         <div class="period-card peak"><div class="period-name" data-i18n="period_peak">尖峰时段</div><div class="period-time">09:00 - 12:00 / 18:00 - 21:00</div><div class="period-rate mono" id="periodPeakRate">RM 0.52<span style="font-size:12px;color:var(--text-muted);">/kWh</span></div></div>
@@ -306,7 +311,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC"
         <div class="kpi-card red"><div class="kpi-label" data-i18n="bill_kpi_overdue">逾期未缴</div><div class="kpi-value mono" id="billKpiOverdue" style="font-size:22px;">RM 3,763</div><div class="kpi-trend up" id="billKpiOverdueTrend"><span id="billKpiOverdueCount">1</span><span data-i18n="bill_kpi_overdue_bills">笔欠费</span></div></div>
       </div>
       <div class="card"><div class="card-header"><h3 data-i18n="bill_mgmt_title">&#128101; 租户收费管理</h3><div style="display:flex;gap:8px;"><button class="btn btn-primary btn-sm" onclick="openGenerateBillModal()" data-i18n="gen_bill">&#128203; 生成月度账单</button><button class="btn btn-outline btn-sm" onclick="showToast('success','账单已导出')" data-i18n="export_excel">&#128229; 导出 Excel</button></div></div><div class="card-body"><div class="filter-row"><label data-i18n="filter_status">筛选状态:</label><select class="topbar-select" id="billStatusFilter" onchange="renderBillingPage()"><option value="all" data-i18n="filter_all">全部</option><option value="paid" data-i18n="pay_paid">已缴</option><option value="pending" data-i18n="pay_pending">待缴</option><option value="overdue" data-i18n="pay_overdue">欠费</option></select><label data-i18n="filter_split">分摊方式:</label><select class="topbar-select" id="billSplitFilter" onchange="renderBillingPage()"><option value="all" data-i18n="filter_all">全部</option><option value="demand" data-i18n="split_by_demand">按需求量分摊</option><option value="area" data-i18n="split_by_area">按面积分摊</option><option value="ratio" data-i18n="split_by_ratio">按比例分配</option></select></div><div style="overflow-x:auto;"><table class="data-table" id="billingPageTable"><thead><tr><th data-i18n="th_tenant">租户</th><th data-i18n="th_meter">表计号</th><th class="num" data-i18n="th_usage">用电量(kWh)</th><th class="num" data-i18n="th_energy_fee">分时电费(RM)</th><th class="num" data-i18n="th_cap_share">容量分摊(RM)</th><th data-i18n="th_split_type">分摊方式</th><th class="num" data-i18n="th_afa">AFA附加费(RM)</th><th class="num" data-i18n="th_total_due">应收合计(RM)</th><th data-i18n="th_pay_status">缴费状态</th><th data-i18n="th_ops">操作</th></tr></thead><tbody></tbody></table></div><div class="pagination"><button>&laquo;</button><button class="active">1</button><button>2</button><button>&raquo;</button></div></div></div>
-      <div class="chart-row"><div class="card"><div class="card-header"><h3 data-i18n="bill_trend_title">&#128202; 月度收费趋势</h3></div><div class="card-body"><div id="billTrendChart" class="chart-box"></div></div></div><div class="card"><div class="card-header"><h3 data-i18n="bill_status_pie">&#128176; 缴费状态分布</h3></div><div class="card-body"><div id="billStatusPieChart" class="chart-box"></div></div></div></div>
+      <div class="card"><div class="card-header"><h3 data-i18n="bill_status_pie">&#128176; 缴费状态分布</h3></div><div class="card-body"><div id="billStatusPieChart" class="chart-box" style="max-width:680px;margin:0 auto;"></div></div></div>
     </div>
     <!-- PAGE: RATES -->
     <div class="page-section" id="page-rates">
@@ -324,7 +329,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC"
       <div class="card"><div class="card-header"><h3 data-i18n="settings_title">&#9881;&#65039; 系统设置</h3></div><div class="card-body">
         <div class="tabs">
           <button class="tab-btn active" data-tab="tab-threshold" data-i18n="tab_threshold">阈值设置</button>
-          <button class="tab-btn" data-tab="tab-tou-config" data-i18n="tab_tou_config">分时配置</button>
+          <button class="tab-btn" data-tab="tab-tou-config" data-i18n="tab_tou_config">费用配置</button>
           <button class="tab-btn" data-tab="tab-tenant-mgmt" data-i18n="tab_tenant_mgmt">租户管理</button>
         </div>
         <div class="tab-panel active" id="tab-threshold">
@@ -340,7 +345,14 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC"
             <tr><td><span style="color:var(--primary);font-weight:600;" data-i18n="period_flat">平段</span></td><td class="mono" id="touFlatTimeDisplay" style="font-size:12px;">07:00-09:00 / 12:00-18:00 / 21:00-23:00</td><td class="num mono" id="touFlatRateDisplay">0.35</td><td><button class="btn-link" onclick="openTouEditModal('flat')" data-i18n="btn_edit">编辑</button></td></tr>
             <tr><td><span style="color:var(--accent);font-weight:600;" data-i18n="period_valley">谷段</span></td><td class="mono" id="touValleyTimeDisplay" style="font-size:12px;">23:00-07:00</td><td class="num mono" id="touValleyRateDisplay">0.22</td><td><button class="btn-link" onclick="openTouEditModal('valley')" data-i18n="btn_edit">编辑</button></td></tr>
           </tbody></table>
-          <div style="margin-top:16px;"><button class="btn btn-primary" onclick="saveTouConfig()" data-i18n="btn_save">&#128190; 保存设置</button></div>
+          <div class="fee-config-block">
+            <h4 style="font-size:14px;" data-i18n="afa_config_title">AFA费率配置</h4>
+            <p style="font-size:12px;color:var(--text-muted);margin:4px 0 14px;" data-i18n="afa_config_desc">AFA（燃料成本转嫁附加费）按各租户实际用电量计收，计入应收合计</p>
+            <table class="data-table" id="afaConfigTable"><thead><tr><th data-i18n="afa_name_col">费率名称</th><th data-i18n="afa_basis_col">计费口径</th><th class="num" data-i18n="afa_rate_col">费率(RM/kWh)</th><th data-i18n="afa_eff_month_col">生效月份</th><th data-i18n="th_ops">操作</th></tr></thead><tbody>
+              <tr><td><span style="color:var(--warning);font-weight:600;">AFA</span></td><td class="afa-basis-text" style="font-size:12px;" data-i18n="afa_basis_val">按实际用电量计收</td><td class="num mono" id="afaRateDisplay">0.030</td><td class="mono" style="font-size:12px;" id="afaMonthDisplay">2026-11</td><td><button class="btn-link" onclick="openAfaEditModal()" data-i18n="btn_edit">编辑</button></td></tr>
+            </tbody></table>
+          </div>
+          <div style="margin-top:20px;"><button class="btn btn-primary" onclick="saveFeeConfig()" data-i18n="btn_save">&#128190; 保存设置</button></div>
         </div>
         <div class="tab-panel" id="tab-tenant-mgmt">
           <div class="toolbar"><h4 style="font-size:14px;" data-i18n="tenant_mgmt_title">租户信息管理</h4><button class="btn btn-primary btn-sm" onclick="openTenantModal(-1)">+ 新增租户</button></div>
@@ -358,6 +370,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC"
 <div class="modal-overlay" id="generateBillModal"><div class="modal" style="width:780px;"><div class="modal-header"><h3>&#128203; 生成月度账单</h3><button class="modal-close" onclick="closeModal('generateBillModal')">&times;</button></div><div class="modal-body"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><select class="form-input" id="genBillMonthSelect" style="flex:1;min-width:140px;" onchange="onMonthSelectChange()"></select></div><div id="genBillSummary" class="gen-bill-summary"></div><div id="genBillPreview" style="max-height:340px;overflow-y:auto;margin-top:12px;"></div></div><div class="modal-footer" style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-outline" onclick="closeModal('generateBillModal')">取消</button><div style="flex:1;"></div><button class="btn btn-outline" onclick="downloadBillExcel()" style="border-color:var(--accent);color:var(--accent);">&#128229; 下载 Excel</button><button class="btn btn-primary" onclick="downloadBillPDF()">&#128196; 下载 PDF</button></div></div></div>
 <div class="modal-overlay" id="tenantModal"><div class="modal" style="width:550px;"><div class="modal-header"><h3 id="tenantModalTitle">&#10133; 新增租户</h3><button class="modal-close" onclick="closeModal('tenantModal')">&times;</button></div><div class="modal-body"><div class="form-group"><label class="form-label" data-i18n="tenant_name">租户名称</label><input class="form-input" type="text" id="tmName" placeholder="请输入租户名称"></div><div class="form-row"><div class="form-group"><label class="form-label" data-i18n="tenant_meter">表计号</label><input class="form-input mono" type="text" id="tmMeter" placeholder="M-XXXX"></div><div class="form-group"><label class="form-label" data-i18n="tenant_contact">联系人</label><input class="form-input" type="text" id="tmContact" placeholder="请输入联系人"></div></div><div class="form-row"><div class="form-group"><label class="form-label" data-i18n="tenant_phone">联系电话</label><input class="form-input mono" type="text" id="tmPhone" placeholder="+60 XX-XXX XXXX"></div><div class="form-group"><label class="form-label" data-i18n="tenant_email">邮件地址</label><input class="form-input" type="email" id="tmEmail" placeholder="email@example.com"></div></div><div class="form-row"><div class="form-group"><label class="form-label" data-i18n="tenant_contract">合同容量(kW)</label><input class="form-input mono" type="number" id="tmContract" placeholder="200"></div><div class="form-group"><label class="form-label" data-i18n="tenant_split">分摊方式</label><select class="form-input" id="tmSplit"><option value="demand" data-i18n="split_by_demand">按需求量</option><option value="area" data-i18n="split_by_area">按面积</option><option value="ratio" data-i18n="split_by_ratio">按比例</option></select></div></div></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('tenantModal')" data-i18n="btn_cancel">取消</button><button class="btn btn-primary" onclick="saveTenant()" data-i18n="btn_confirm">确认</button></div></div></div>
 <div class="modal-overlay" id="touEditModal"><div class="modal" style="width:600px;"><div class="modal-header"><h3 id="touEditTitle">&#9881;&#65039; 编辑时段配置</h3><button class="modal-close" onclick="closeModal('touEditModal')">&times;</button></div><div class="modal-body"><div class="form-group"><label class="form-label" data-i18n="tou_period">时段名称</label><input class="form-input" type="text" id="touEditName" readonly style="background:var(--bg);"></div><div class="form-group"><label class="form-label" data-i18n="tou_time">时间范围</label><div id="touTimeSegments" style="margin-bottom:8px;"></div><button class="btn btn-outline btn-sm" onclick="addTouTimeSegment()" style="font-size:12px;padding:4px 12px;">+ 添加时间段</button></div><div class="form-group"><label class="form-label" data-i18n="tou_rate">电价(RM/kWh)</label><input class="form-input mono" type="number" step="0.01" id="touEditRate" style="width:120px;"></div></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('touEditModal')" data-i18n="btn_cancel">取消</button><button class="btn btn-primary" onclick="saveTouEdit()" data-i18n="btn_confirm">确认保存</button></div></div></div>
+<div class="modal-overlay" id="afaEditModal"><div class="modal" style="width:460px;"><div class="modal-header"><h3 data-i18n="modal_afa_title">&#9881;&#65039; 编辑AFA费率</h3><button class="modal-close" onclick="closeModal('afaEditModal')">&times;</button></div><div class="modal-body"><div class="form-group"><label class="form-label" data-i18n="afa_rate_col">费率(RM/kWh)</label><input class="form-input mono" type="number" step="0.001" min="0" id="afaEditRate" oninput="updateAfaPreview()"><div style="font-size:11px;color:var(--text-muted);margin-top:4px;" data-i18n="afa_rate_hint">按租户当月实际用电量（kWh）×费率计收</div></div><div class="form-group"><label class="form-label" data-i18n="afa_eff_month_col">生效月份</label><input class="form-input mono" type="text" id="afaEditMonth" readonly style="background:var(--bg);"></div><div class="form-group"><label class="form-label" data-i18n="afa_preview_label">按当前用电量预估AFA总额</label><div class="bill-detail-item"><div class="bd-value mono" id="afaPreviewValue">RM 0</div></div></div></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('afaEditModal')" data-i18n="btn_cancel">取消</button><button class="btn btn-primary" onclick="saveAfaEdit()" data-i18n="btn_afa_confirm">确认保存</button></div></div></div>
 <div class="modal-overlay" id="rateDetailModal"><div class="modal"><div class="modal-header"><h3 data-i18n="modal_rate_detail">&#128202; 费率对比</h3><button class="modal-close" onclick="closeModal('rateDetailModal')">&times;</button></div><div class="modal-body" id="rateDetailContent"></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('rateDetailModal')" data-i18n="btn_close">关闭</button></div></div></div>
 <div class="modal-overlay" id="addRateModal"><div class="modal"><div class="modal-header"><h3 data-i18n="modal_add_rate">&#10133; 新增费率</h3><button class="modal-close" onclick="closeModal('addRateModal')">&times;</button></div><div class="modal-body"><div class="form-group"><label class="form-label" data-i18n="th_eff_month">生效月份</label><input class="form-input" type="month" value="2026-12"></div><div class="form-row"><div class="form-group"><label class="form-label" data-i18n="th_peak_rate">尖峰电价(RM/kWh)</label><input class="form-input mono" type="number" step="0.01" value="0.54"></div><div class="form-group"><label class="form-label" data-i18n="th_flat_rate">平段电价(RM/kWh)</label><input class="form-input mono" type="number" step="0.01" value="0.36"></div></div><div class="form-row"><div class="form-group"><label class="form-label" data-i18n="th_valley_rate">谷段电价(RM/kWh)</label><input class="form-input mono" type="number" step="0.01" value="0.23"></div><div class="form-group"><label class="form-label" data-i18n="th_afa_rate">AFA费率(RM/kWh)</label><input class="form-input mono" type="number" step="0.001" value="0.030"></div></div><div class="form-group"><label class="form-label" data-i18n="remark">备注</label><input class="form-input" type="text" placeholder="选填"></div></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('addRateModal')" data-i18n="btn_cancel">取消</button><button class="btn btn-primary" onclick="addNewRate()" data-i18n="btn_confirm">确认添加</button></div></div></div>
 <script>
@@ -370,6 +383,9 @@ i18n.en.status_warning='Threshold Warning';i18n.en.status_danger='Threshold Dang
 i18n.en.action_suggest_normal='Good utilization';i18n.en.action_suggest_monitor='Monitor utilization';i18n.en.action_suggest_overload='Reduce load or expand';
 i18n.zh.btn_generate_bill='📋 生成账单';i18n.zh.action_history='查看历史';i18n.zh.th_email='邮件地址';i18n.zh.bill_email_title='📧 发送至租户邮箱';i18n.zh.bill_email_label='租户邮箱';i18n.zh.bill_email_placeholder='请输入租户邮箱地址';i18n.zh.bill_email_send='📧 发送PDF账单';i18n.zh.bill_history_title='📋 历史账单记录';i18n.zh.bill_month='账单月份';i18n.zh.bill_usage='用电量(kWh)';i18n.zh.bill_energy='电费(RM)';i18n.zh.bill_cap='容量分摊(RM)';i18n.zh.bill_afa='AFA(RM)';i18n.zh.bill_total='合计(RM)';i18n.zh.bill_status='缴费状态';i18n.zh.bill_due='到期日';i18n.zh.tenant_add_title='➕ 新增租户';i18n.zh.tenant_edit_title='✏️ 编辑租户';i18n.zh.tenant_name='租户名称';i18n.zh.tenant_meter='表计号';i18n.zh.tenant_contact='联系人';i18n.zh.tenant_phone='联系电话';i18n.zh.tenant_email='邮件地址';i18n.zh.tenant_contract='合同容量(kW)';i18n.zh.tenant_split='分摊方式';i18n.zh.tou_period='时段名称';i18n.zh.tou_time='时间范围';i18n.zh.tou_rate='电价(RM/kWh)';i18n.zh.btn_add='添加';i18n.zh.msg_email_sent='账单已发送至';i18n.zh.msg_tenant_added='租户已添加';i18n.zh.msg_tenant_edited='租户信息已更新';i18n.zh.msg_tou_saved='分时配置已保存';
 i18n.en.btn_generate_bill='📋 Generate Bill';i18n.en.action_history='History';i18n.en.th_email='Email';i18n.en.bill_email_title='📧 Send to Tenant Email';i18n.en.bill_email_label='Tenant Email';i18n.en.bill_email_placeholder='Enter tenant email address';i18n.en.bill_email_send='📧 Send PDF Bill';i18n.en.bill_history_title='📋 Billing History';i18n.en.bill_month='Month';i18n.en.bill_usage='Usage(kWh)';i18n.en.bill_energy='Energy(RM)';i18n.en.bill_cap='Capacity(RM)';i18n.en.bill_afa='AFA(RM)';i18n.en.bill_total='Total(RM)';i18n.en.bill_status='Status';i18n.en.bill_due='Due Date';i18n.en.tenant_add_title='➕ Add Tenant';i18n.en.tenant_edit_title='✏️ Edit Tenant';i18n.en.tenant_name='Tenant Name';i18n.en.tenant_meter='Meter No';i18n.en.tenant_contact='Contact';i18n.en.tenant_phone='Phone';i18n.en.tenant_email='Email';i18n.en.tenant_contract='Contract(kW)';i18n.en.tenant_split='Split Type';i18n.en.tou_period='Period';i18n.en.tou_time='Time Range';i18n.en.tou_rate='Rate(RM/kWh)';i18n.en.btn_add='Add';i18n.en.msg_email_sent='Bill sent to';i18n.en.msg_tenant_added='Tenant added';i18n.en.msg_tenant_edited='Tenant updated';i18n.en.msg_tou_saved='TOU config saved';
+
+i18n.zh.tab_tou_config='费用配置';i18n.zh.kpi_cost_note='已包含分摊以及附加费';i18n.zh.tou_kpi_total='分时电费合计';i18n.zh.th_extra_fee='容量分摊+附加(RM)';i18n.zh.th_total_bill='合计电费(RM)';i18n.zh.tou_detail_hint='合计电费 = 分时电费 + 容量分摊 + AFA附加费，与本月总电费一致';i18n.zh.afa_config_title='AFA费率配置';i18n.zh.afa_config_desc='AFA（燃料成本转嫁附加费）按各租户实际用电量计收，计入应收合计';i18n.zh.afa_name_col='费率名称';i18n.zh.afa_basis_col='计费口径';i18n.zh.afa_rate_col='费率(RM/kWh)';i18n.zh.afa_eff_month_col='生效月份';i18n.zh.afa_basis_val='按实际用电量计收';i18n.zh.afa_rate_hint='按租户当月实际用电量（kWh）×费率计收';i18n.zh.afa_preview_label='按当前用电量预估AFA总额';i18n.zh.modal_afa_title='⚙️ 编辑AFA费率';i18n.zh.btn_afa_confirm='确认保存';i18n.zh.msg_afa_saved='AFA费率已更新';i18n.zh.msg_fee_saved='费用配置已保存';
+i18n.en.tab_tou_config='Fee Config';i18n.en.kpi_cost_note='Incl. capacity share & AFA';i18n.en.tou_kpi_total='TOU Energy Total';i18n.en.th_extra_fee='Capacity+AFA(RM)';i18n.en.th_total_bill='Total Bill(RM)';i18n.en.tou_detail_hint='Total bill = TOU energy + capacity share + AFA, equal to the monthly bill';i18n.en.afa_config_title='AFA Rate Config';i18n.en.afa_config_desc='AFA (Fuel Cost Allocation) is billed on each tenant\'s actual consumption and included in the total due';i18n.en.afa_name_col='Rate Name';i18n.en.afa_basis_col='Basis';i18n.en.afa_rate_col='Rate(RM/kWh)';i18n.en.afa_eff_month_col='Effective Month';i18n.en.afa_basis_val='Charged on actual usage';i18n.en.afa_rate_hint='Monthly usage (kWh) × rate';i18n.en.afa_preview_label='Estimated AFA on current usage';i18n.en.modal_afa_title='⚙️ Edit AFA Rate';i18n.en.btn_afa_confirm='Save';i18n.en.msg_afa_saved='AFA rate updated';i18n.en.msg_fee_saved='Fee config saved';
 
 let currentLang = 'zh';
 let currentPage = 'overview';
@@ -1083,15 +1099,19 @@ function renderOverview(){
   }).join('');
 
   const tbody=document.querySelector('#ovTouDetailTable tbody');
-  let tPk=0,tFt=0,tVl=0;
+  const billMap={};
+  billingData.forEach(b=>{billMap[b.tenant]=b;});
+  let tPk=0,tFt=0,tVl=0,tEnergy=0,tExtra=0,tBill=0;
   tbody.innerHTML=touDetailData.map(d=>{
     const total=d.pk+d.ft+d.vl;
-    const cost=d.pk*pkRate+d.ft*ftRate+d.vl*vlRate;
-    tPk+=d.pk;tFt+=d.ft;tVl+=d.vl;
-    return'<tr><td>'+d.tenant+'</td><td class="num mono">'+d.pk.toLocaleString()+'</td><td class="num mono">'+d.ft.toLocaleString()+'</td><td class="num mono">'+d.vl.toLocaleString()+'</td><td class="num mono" style="font-weight:600;">'+total.toLocaleString()+'</td><td class="num mono" style="font-weight:600;">'+fmt(Math.round(cost))+'</td></tr>';
+    const bill=billMap[d.tenant]||{};
+    const energy=bill.energyFee!=null?bill.energyFee:Math.round(d.pk*pkRate+d.ft*ftRate+d.vl*vlRate);
+    const extra=(bill.capShare||0)+(bill.afa||0);
+    const cost=bill.total!=null?bill.total:energy+extra;
+    tPk+=d.pk;tFt+=d.ft;tVl+=d.vl;tEnergy+=energy;tExtra+=extra;tBill+=cost;
+    return'<tr><td>'+d.tenant+'</td><td class="num mono">'+d.pk.toLocaleString()+'</td><td class="num mono">'+d.ft.toLocaleString()+'</td><td class="num mono">'+d.vl.toLocaleString()+'</td><td class="num mono" style="font-weight:600;">'+total.toLocaleString()+'</td><td class="num mono">'+energy.toLocaleString()+'</td><td class="num mono">'+extra.toLocaleString()+'</td><td class="num mono" style="font-weight:600;">'+fmt(cost)+'</td></tr>';
   }).join('');
-  const totalAll=tPk*pkRate+tFt*ftRate+tVl*vlRate;
-  tbody.innerHTML+='<tr class="total-row"><td>'+t('total_row')+'</td><td class="num mono">'+tPk.toLocaleString()+'</td><td class="num mono">'+tFt.toLocaleString()+'</td><td class="num mono">'+tVl.toLocaleString()+'</td><td class="num mono">'+(tPk+tFt+tVl).toLocaleString()+'</td><td class="num mono">'+fmt(Math.round(totalAll))+'</td></tr>';
+  tbody.innerHTML+='<tr class="total-row"><td>'+t('total_row')+'</td><td class="num mono">'+tPk.toLocaleString()+'</td><td class="num mono">'+tFt.toLocaleString()+'</td><td class="num mono">'+tVl.toLocaleString()+'</td><td class="num mono">'+(tPk+tFt+tVl).toLocaleString()+'</td><td class="num mono">'+tEnergy.toLocaleString()+'</td><td class="num mono">'+tExtra.toLocaleString()+'</td><td class="num mono">'+fmt(tBill)+'</td></tr>';
 
   const bbody=document.querySelector('#ovBillingTable tbody');
   bbody.innerHTML=billingData.map((d,i)=>'<tr><td style="font-weight:600;">'+d.tenant+'</td><td class="num mono" style="font-weight:700;">'+d.total.toLocaleString()+'</td><td><span class="badge '+statusClasses[d.status]+'">'+t(statusLabels[d.status])+'</span></td><td><button class="btn-link" onclick="openBillDetail('+i+')">'+t('action_detail')+'</button></td></tr>').join('');
@@ -1277,32 +1297,6 @@ function renderTou(){
 function renderBilling(){
   updateBillingKPIs();
   renderBillingPage();
-  const months=getActiveMonths();
-  const trendMonths=months.length>6?months.slice(-6):months;
-  const trendBilled=[],trendCollected=[];
-  trendMonths.forEach(m=>{
-    const mp=monthProfiles[m];const r=getRateForMonth(m);const at=getActiveTenantIndices();
-    let totalBilled=0;
-    at.forEach(i=>{
-      const e=mp.touPk[i]*r.peak+mp.touFt[i]*r.flat+mp.touVl[i]*r.valley;
-      totalBilled+=Math.round(e*1.25);
-    });
-    trendBilled.push(totalBilled);
-    trendCollected.push(Math.round(totalBilled*(0.7+Math.sin(allMonths.indexOf(m))*0.15+0.1)));
-  });
-
-  makeChart('billTrendChart',{
-    tooltip:{trigger:'axis',backgroundColor:'#fff',borderColor:'#E5E7EB',textStyle:{color:'#111827',fontSize:12}},
-    legend:{data:[t('chart_billed'),t('chart_collected')],bottom:0,textStyle:{fontSize:11}},
-    grid:{top:20,right:50,bottom:40,left:70},
-    xAxis:{type:'category',data:trendMonths.map(m=>m.substring(5)+(currentLang==='zh'?'月':'')),axisLine:{lineStyle:{color:'#E5E7EB'}},axisLabel:{color:'#6B7280'}},
-    yAxis:[{type:'value',axisLabel:{formatter:'RM {value}',color:'#6B7280',fontSize:10},splitLine:{lineStyle:{color:'#F3F4F6'}}}],
-    series:[
-      {name:t('chart_billed'),type:'bar',data:trendBilled,itemStyle:{color:'#1E4E8C',borderRadius:[4,4,0,0]},barWidth:'35%'},
-      {name:t('chart_collected'),type:'line',data:trendCollected,smooth:true,lineStyle:{width:3,color:'#0E9F6E'},itemStyle:{color:'#0E9F6E'},symbol:'circle',symbolSize:8,areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(14,159,110,0.15)'},{offset:1,color:'rgba(14,159,110,0.02)'}])}}
-    ]
-  });
-
   const paidTotal=billingData.filter(b=>b.status==='paid').reduce((s,b)=>s+b.total,0);
   const pendingTotal=billingData.filter(b=>b.status==='pending').reduce((s,b)=>s+b.total,0);
   const overdueTotal=billingData.filter(b=>b.status==='overdue').reduce((s,b)=>s+b.total,0);
@@ -1366,6 +1360,8 @@ function renderRates(){
 }
 
 function renderSettings(){
+  updateTouConfigDisplay();
+  updateAfaConfigDisplay();
   const displayTenants=baseTenants;
   const tbody=document.querySelector('#tenantMgmtTable tbody');
   if(!tbody)return;
@@ -1464,16 +1460,55 @@ function saveTouEdit() {
   showToast('success', currentLang === 'zh' ? '时段配置已保存' : 'Period config saved');
 }
 
-function saveTouConfig(){
+function saveFeeConfig(){
   var pk=touConfigData.peak.rate;
   var ft=touConfigData.flat.rate;
   var vl=touConfigData.valley.rate;
   allRateData[0].peak=pk;allRateData[0].flat=ft;allRateData[0].valley=vl;
+  allRateData[0].afa=afaConfig.rate;
   pkRate=pk;ftRate=ft;vlRate=vl;
   regenerateData();
   updateOverviewKPIs();updateCapacityKPIs();updateTouKPIs();updateBillingKPIs();updateRateKPIs();
   disposeAllCharts();setTimeout(function(){renderPage(currentPage);},50);
-  showToast('success',t('msg_tou_saved'));
+  showToast('success',t('msg_fee_saved'));
+}
+
+const afaConfig = { rate: allRateData[0].afa, month: allRateData[0].month };
+
+function updateAfaConfigDisplay() {
+  var rateEl = document.getElementById('afaRateDisplay');
+  var monthEl = document.getElementById('afaMonthDisplay');
+  if (rateEl) rateEl.textContent = afaConfig.rate.toFixed(3);
+  if (monthEl) monthEl.textContent = afaConfig.month;
+}
+
+function afaUsageTotal() {
+  return touDetailData.reduce((s, d) => s + d.pk + d.ft + d.vl, 0);
+}
+
+function updateAfaPreview() {
+  var rate = parseFloat(document.getElementById('afaEditRate').value);
+  var total = (isNaN(rate) || rate < 0) ? 0 : Math.round(afaUsageTotal() * rate);
+  document.getElementById('afaPreviewValue').textContent = 'RM ' + fmt(total);
+}
+
+function openAfaEditModal() {
+  document.getElementById('afaEditRate').value = afaConfig.rate.toFixed(3);
+  document.getElementById('afaEditMonth').value = afaConfig.month;
+  updateAfaPreview();
+  openModal('afaEditModal');
+}
+
+function saveAfaEdit() {
+  var rate = parseFloat(document.getElementById('afaEditRate').value);
+  if (isNaN(rate) || rate < 0) {
+    showToast('error', currentLang === 'zh' ? '请输入有效费率' : 'Enter valid rate');
+    return;
+  }
+  afaConfig.rate = rate;
+  updateAfaConfigDisplay();
+  closeModal('afaEditModal');
+  showToast('info', t('msg_afa_saved'));
 }
 
 let editingTenantIdx=-1;
